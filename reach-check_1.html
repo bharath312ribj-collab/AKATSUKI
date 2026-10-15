@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reach Check</title>
+<style>
+:root{
+  --bg:#FFFFFF;--surface:#FFFFFF;--ink:#14213A;--muted:#4D5B75;--line:#CFD8E5;
+  --brand:#0A6B67;--onbrand:#FFFFFF;--soft:#E7F1F0;--focus:#1D4ED8;
+  --c-crit:#A81F14;--b-crit:#FBE3E0;--c-high:#A2400B;--b-high:#FDE9DA;
+  --c-med:#7A5600;--b-med:#FBF0CC;--c-ok:#17663D;--b-ok:#E1F3E8;--c-low:#3F4E69;--b-low:#E8ECF3;
+  color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Tamil","Noto Sans","Latha",Roboto,sans-serif;
+  font-size:1rem;line-height:1.55}
+h1,h2,h3{line-height:1.25;margin:0 0 .5rem}
+h1{font-size:1.5rem}h2{font-size:1.25rem}h3{font-size:1.05rem}
+p{margin:0 0 .75rem}
+a{color:var(--brand)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--brand);color:var(--onbrand);padding:.6rem 1rem;z-index:10}
+.skip:focus{left:.5rem;top:.5rem}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.wrap{max-width:1120px;margin:0 auto;padding:0 1rem}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;align-items:center;justify-content:space-between;padding-top:.9rem;padding-bottom:.9rem}
+.brand{display:flex;align-items:center;gap:.7rem}
+.brand svg{color:var(--brand)}
+.brand b{font-size:1.3rem;display:block;line-height:1.1}
+.brand span{color:var(--muted);font-size:.9rem}
+.prefs{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.prefs label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+select,input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:.55rem .65rem;min-height:44px;width:100%}
+.prefs select{width:auto;min-height:36px;padding:.25rem .4rem}
+textarea{min-height:110px;resize:vertical}
+.roles{display:flex;gap:.5rem;padding:.75rem 0}
+.roles button{flex:1;max-width:260px}
+.btn{font:inherit;font-weight:600;min-height:44px;padding:.5rem 1rem;border-radius:8px;border:1.5px solid var(--brand);background:var(--surface);color:var(--brand);cursor:pointer}
+.btn.primary,.btn[aria-pressed="true"],.btn[aria-current="page"]{background:var(--brand);color:var(--onbrand)}
+.btn.sm{min-height:36px;padding:.2rem .7rem;font-size:.9rem}
+.btn.plain{border-color:var(--line);color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+nav.sub{display:flex;flex-wrap:wrap;gap:.4rem;margin:.25rem 0 1rem}
+main{padding-bottom:2rem;outline:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1rem}
+.grid{display:grid;gap:1rem}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.field{margin-bottom:1rem}
+.field label,.field legend{display:block;font-weight:600;margin-bottom:.3rem}
+.field.bad select,.field.bad input,.field.bad textarea{border-color:var(--c-crit)}
+.err{color:var(--c-crit);font-weight:600;margin:.3rem 0 0;font-size:.92rem}
+.hint{color:var(--muted);font-size:.9rem}
+.check{display:flex;gap:.6rem;align-items:flex-start}
+.check input{width:24px;height:24px;margin-top:.15rem;flex:none}
+.banner{border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;font-weight:600}
+.banner.ok{background:var(--b-ok);color:var(--c-ok)}
+.banner.err{background:var(--b-crit);color:var(--c-crit)}
+.badge{display:inline-block;border-radius:999px;padding:.05rem .65rem;font-size:.85rem;font-weight:700;border:1px solid currentColor;white-space:nowrap}
+.s-Critical{color:var(--c-crit);background:var(--b-crit)}
+.s-High{color:var(--c-high);background:var(--b-high)}
+.s-Medium{color:var(--c-med);background:var(--b-med)}
+.s-Low,.s-None{color:var(--c-low);background:var(--b-low)}
+.s-OK{color:var(--c-ok);background:var(--b-ok)}
+.bars{width:34px;height:28px;flex:none}
+.bars rect{fill:currentColor}.bars .off{opacity:.2}
+.h-4{color:var(--c-ok)}.h-3{color:var(--c-med)}.h-2{color:var(--c-high)}.h-1{color:var(--c-crit)}
+.svc{display:flex;gap:.8rem;align-items:flex-start}
+.svc h3{margin-bottom:.15rem}
+.kpi b{display:block;font-size:2rem;line-height:1.1}
+.kpi span{color:var(--muted);font-size:.92rem}
+.scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;background:var(--soft);white-space:nowrap}
+td.cell{text-align:center;white-space:nowrap;font-weight:600}
+.alert{border-left:6px solid var(--line)}
+.alert.s-Critical{border-left-color:var(--c-crit)}.alert.s-High{border-left-color:var(--c-high)}.alert.s-Medium{border-left-color:var(--c-med)}
+.alert{background:var(--surface);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.meta{color:var(--muted);font-size:.9rem}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:flex;gap:.7rem;padding:.55rem 0;border-bottom:1px dashed var(--line)}
+.steps .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:700;flex:none}
+.steps .done .dot{background:var(--brand);border-color:var(--brand);color:var(--onbrand)}
+.steps .now .dot{border-color:var(--brand);color:var(--brand)}
+details.card summary{font-weight:700;cursor:pointer;min-height:32px}
+.filters{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem}
+.filters label{font-size:.85rem;color:var(--muted);display:block}
+.filters select{width:auto;min-width:140px}
+.idbig{font-size:2rem;font-weight:800;letter-spacing:.04em}
+textarea.report{min-height:380px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;padding:1rem 0 1.5rem}
+@media (max-width:560px){h1{font-size:1.3rem}.roles button{max-width:none}}
+@media print{header.top,nav,.roles,footer,.btn{display:none!important}}
+
+body{background:#fff}
+h1{font-size:2.1rem;font-weight:800}h2{font-size:1.6rem;font-weight:800}h3{font-size:1.3rem;font-weight:800}
+.wm{position:fixed;inset:0;z-index:0;pointer-events:none;background-repeat:no-repeat;background-position:center 55%;background-size:min(70vw,440px);opacity:.07}
+header.top,main,footer,.wrap{position:relative;z-index:1}
+.logo{width:60px;height:60px;object-fit:contain}
+.gate{max-width:560px;margin:0 auto;padding:2rem 1rem;text-align:center;position:relative;z-index:1}
+.gate .logo{width:130px;height:130px}
+.bigbtn{display:block;width:100%;font:inherit;font-size:1.5rem;font-weight:800;min-height:72px;margin:.8rem 0;border-radius:14px;border:3px solid var(--brand);background:#fff;color:var(--brand);cursor:pointer}
+.bigbtn.fill{background:var(--brand);color:#fff}
+.sub .btn{font-size:1.1rem;min-height:52px}
+.vbar{position:fixed;right:.75rem;bottom:.75rem;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.25);font-size:1.1rem}
+.leg{list-style:none;padding:0;margin:.5rem 0}.leg li{display:flex;gap:.5rem;align-items:center;margin:.2rem 0}.leg i{width:16px;height:16px;border-radius:3px;display:inline-block;flex:none}
+.dot2{background:var(--c-crit);color:#fff;border-radius:999px;padding:0 .5rem;font-size:.85rem;margin-left:.4rem}
+.unread{border-left:6px solid var(--brand)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="live" class="sr" aria-live="polite"></div>
+<div id="app"></div>
+
+<script>
+(function(){
+'use strict';
+var PAGE_KB=Math.round(new Blob([document.documentElement.outerHTML]).size/1024);
+var KEY='reachcheck-v1';
+var H=3600e3,D=24*H;
+var now=function(){return Date.now()};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h};
+var RANK={Critical:3,High:2,Medium:1,Low:0};
+var SLA_T={Critical:48*H,High:72*H,Medium:168*H};
+var SLA_A={Critical:24*H,High:72*H,Medium:168*H,Low:336*H};
+var TYPES={
+  slow:{sev:'High',en:"Page is too slow or won't load",ta:'பக்கம் மிகவும் மெதுவாக உள்ளது / திறக்கவில்லை'},
+  data:{sev:'Medium',en:'Uses too much data',ta:'அதிக டேட்டா செலவாகிறது'},
+  reader:{sev:'Critical',en:"Screen reader or voice tool can't use it",ta:'ஸ்கிரீன் ரீடர் / குரல் கருவி வேலை செய்யவில்லை'},
+  small:{sev:'Medium',en:'Text is too small or hard to read',ta:'எழுத்து சிறியதாக / படிக்க கடினமாக உள்ளது'},
+  stuck:{sev:'High',en:"I can't finish the form or task",ta:'படிவத்தை / பணியை முடிக்க முடியவில்லை'},
+  other:{sev:'Medium',en:'Something else',ta:'வேறு பிரச்சினை'}
+};
+var DEVICES={
+  basic:{en:'Basic phone (SMS or voice)',ta:'அடிப்படை போன் (SMS / குரல்)'},
+  s2g:{en:'Smartphone on 2G or 3G',ta:'2G / 3G ஸ்மார்ட்போன்'},
+  s4g:{en:'Smartphone on 4G or Wi-Fi',ta:'4G / Wi-Fi ஸ்மார்ட்போன்'},
+  pc:{en:'Computer',ta:'கணினி'}
+};
+var ATS={
+  none:{en:'None',ta:'எதுவும் இல்லை'},
+  reader:{en:'Screen reader (TalkBack, NVDA)',ta:'ஸ்கிரீன் ரீடர் (TalkBack, NVDA)'},
+  voice:{en:'Voice control',ta:'குரல் கட்டுப்பாடு'},
+  mag:{en:'Magnifier or large text',ta:'பெரிதாக்கி / பெரிய எழுத்து'},
+  sw:{en:'Switch access',ta:'ஸ்விட்ச் அணுகல்'}
+};
+var ACTIONS={
+  LOAD:'Compress images, defer scripts and add a text-only page so it loads in under 5 s on slow 3G.',
+  SIZE:'Cut page weight below 1 MB: compress images, remove autoplay media, lazy-load the rest.',
+  DATA:'Bring data per task under 2 MB: smaller uploads, cached forms, a data-saver mode.',
+  AT:'Fix the screen reader flow: add labels and focus order, then re-test with TalkBack and NVDA.',
+  OFFLINE:'Provide an offline, text-only or SMS fallback for core tasks.',
+  CONTRAST:'Raise colour contrast to at least 4.5:1 for text and controls.',
+  WCAG:'Fix critical WCAG A/AA failures: alt text, form labels, keyboard access.',
+  UPTIME:'Investigate outages and timeouts; monitor from low-bandwidth locations.',
+  CLUSTER:'Escalate to the owner now: many people in one area report the same problem.',
+  UNASSIGNED:'Assign an owner today and confirm with the reporter.',
+  NORETEST:'Re-test the fix on a real low-bandwidth device and with assistive tech, then verify.',
+  BLIND:'Schedule tests in the untested areas using each area\'s real network type.'
+};
+var SEED_FP={'S6|LOAD':1,'S3|DATA':1};
+
+/* ---------- i18n (member-facing screens) ---------- */
+var T={
+en:{
+ tabReport:'Report a problem',tabTrack:'Check my ticket',tabServices:'Which services work for me?',
+ repTitle:'Tell us what is not working',repIntro:'It takes about two minutes. You can stay anonymous.',
+ choose:'Choose…',fSvc:'Which service?',fArea:'Where are you?',fType:'What went wrong?',fDev:'What are you using?',fAt:'Do you use an assistive tool?',
+ fDesc:'Tell us what happened',fAnon:'Keep my name private',fName:'Your name (optional)',fConsent:'My report can be used to fix this service',send:'Send report',
+ e_svc:'Choose a service',e_area:'Choose your area',e_type:'Choose what went wrong',e_desc:'Write at least 10 characters about what happened',e_spam:'Please remove links or repeated characters and try again',e_consent:'Tick this box to send your report',
+ gotIt:'Report received',yourId:'Your ticket ID',keepId:'Keep this number. Use it under "Check my ticket" to follow progress.',
+ dupNote:'Other people reported this too. Your report was added to ticket',another:'Report another problem',
+ trkTitle:'Check my ticket',trkId:'Ticket ID (for example T-1001)',trkGo:'Check status',trkNone:'No ticket found with that ID. Check the number and try again.',
+ st0:'Received',st1:'Assigned to a person',st2:'Work in progress',st3:'Fixed',st4:'Confirmed after re-test',stDone:'Done',stNow:'Now',stWait:'Waiting',
+ merged:'Your report was merged into ticket',fixQ:'Is it fixed for you?',yes:'Yes, it works now',no:'No, still a problem',rate:'How satisfied are you? (1 to 5)',
+ thanksYes:'Thank you. The team will re-test and close the ticket.',reopened:'Thank you. We reopened the ticket.',
+ svcTitle:'Which services work on your phone?',svcIntro:'Updated from tests in your area and from reports by people like you.',
+ h4:'Works well',h3:'Mostly works',h2:'Some problems',h1:'Hard to use right now',
+ offl:'Works offline or in low-data mode',sms:'Text-only or SMS option',atOk:'Tested with screen readers',atBad:'Screen reader problems found',atNo:'Not tested with screen readers yet',
+ yesW:'Yes',noW:'No',tested:'Last tested',
+ langL:'Language',sizeL:'Text size',themeL:'Theme'
+},
+ta:{
+ tabReport:'சிக்கலைப் பதிவு செய்யுங்கள்',tabTrack:'என் புகார் நிலை',tabServices:'எந்த சேவைகள் எனக்கு வேலை செய்கின்றன?',
+ repTitle:'என்ன வேலை செய்யவில்லை என்று சொல்லுங்கள்',repIntro:'இதற்கு இரண்டு நிமிடம் போதும். உங்கள் பெயரை மறைத்தும் அனுப்பலாம்.',
+ choose:'தேர்ந்தெடுக்கவும்…',fSvc:'எந்த சேவை?',fArea:'நீங்கள் எந்தப் பகுதியில் இருக்கிறீர்கள்?',fType:'என்ன பிரச்சினை?',fDev:'எந்த சாதனம் / இணைப்பு?',fAt:'உதவி கருவி ஏதேனும் பயன்படுத்துகிறீர்களா?',
+ fDesc:'என்ன நடந்தது என்று சொல்லுங்கள்',fAnon:'என் பெயரை மறைத்து வையுங்கள்',fName:'உங்கள் பெயர் (விருப்பம்)',fConsent:'என் புகாரை இந்த சேவையை சரிசெய்யப் பயன்படுத்தலாம்',send:'புகாரை அனுப்பு',
+ e_svc:'ஒரு சேவையைத் தேர்ந்தெடுக்கவும்',e_area:'உங்கள் பகுதியைத் தேர்ந்தெடுக்கவும்',e_type:'பிரச்சினையைத் தேர்ந்தெடுக்கவும்',e_desc:'என்ன நடந்தது என்று குறைந்தது 10 எழுத்துகள் எழுதுங்கள்',e_spam:'இணைப்புகள் அல்லது திரும்பத் திரும்ப வரும் எழுத்துகளை நீக்கி மீண்டும் முயலுங்கள்',e_consent:'அனுப்ப இந்த பெட்டியில் குறியிடுங்கள்',
+ gotIt:'புகார் பெறப்பட்டது',yourId:'உங்கள் டிக்கெட் எண்',keepId:'இந்த எண்ணை வைத்துக்கொள்ளுங்கள். முன்னேற்றம் அறிய "என் புகார் நிலை" பகுதியில் பயன்படுத்தலாம்.',
+ dupNote:'மற்றவர்களும் இதே பிரச்சினையைச் சொல்லியுள்ளனர். உங்கள் புகார் இந்த டிக்கெட்டில் சேர்க்கப்பட்டது:',another:'இன்னொரு பிரச்சினையைப் பதிவு செய்',
+ trkTitle:'என் புகார் நிலை',trkId:'டிக்கெட் எண் (எ.கா. T-1001)',trkGo:'நிலையைப் பார்',trkNone:'இந்த எண்ணில் டிக்கெட் இல்லை. எண்ணைச் சரிபார்த்து மீண்டும் முயலுங்கள்.',
+ st0:'பெறப்பட்டது',st1:'ஒருவருக்கு ஒதுக்கப்பட்டது',st2:'வேலை நடக்கிறது',st3:'சரிசெய்யப்பட்டது',st4:'மறுசோதனைக்குப் பின் உறுதியானது',stDone:'முடிந்தது',stNow:'இப்போது',stWait:'காத்திருக்கிறது',
+ merged:'உங்கள் புகார் இந்த டிக்கெட்டுடன் இணைக்கப்பட்டது:',fixQ:'உங்களுக்கு சரியாகிவிட்டதா?',yes:'ஆம், இப்போது வேலை செய்கிறது',no:'இல்லை, இன்னும் பிரச்சினை உள்ளது',rate:'உங்கள் திருப்தி எவ்வளவு? (1 முதல் 5)',
+ thanksYes:'நன்றி. குழு மறுசோதனை செய்து டிக்கெட்டை மூடும்.',reopened:'நன்றி. டிக்கெட்டை மீண்டும் திறந்துள்ளோம்.',
+ svcTitle:'உங்கள் போனில் எந்த சேவைகள் வேலை செய்கின்றன?',svcIntro:'உங்கள் பகுதியில் நடந்த சோதனைகள் மற்றும் மக்களின் புகார்களின் அடிப்படையில் புதுப்பிக்கப்படுகிறது.',
+ h4:'நன்றாக வேலை செய்கிறது',h3:'பெரும்பாலும் வேலை செய்கிறது',h2:'சில பிரச்சினைகள் உள்ளன',h1:'தற்போது பயன்படுத்துவது கடினம்',
+ offl:'ஆஃப்லைன் / குறைந்த டேட்டா முறை',sms:'எழுத்து மட்டும் அல்லது SMS வசதி',atOk:'ஸ்கிரீன் ரீடருடன் சோதிக்கப்பட்டது',atBad:'ஸ்கிரீன் ரீடர் பிரச்சினைகள் உள்ளன',atNo:'ஸ்கிரீன் ரீடருடன் இன்னும் சோதிக்கப்படவில்லை',
+ yesW:'உண்டு',noW:'இல்லை',tested:'கடைசி சோதனை',
+ langL:'மொழி',sizeL:'எழுத்து அளவு',themeL:'தோற்றம்'
+}};
+
+
+Object.assign(T.ta,{
+ yourId:'உங்கள் புகார் எண்',keepId:'இந்த எண்ணை வைத்துக்கொள்ளுங்கள். வேலை எந்த நிலையில் உள்ளது என்று அறிய "என் புகார் நிலை" பகுதியில் இந்த எண்ணைப் போடுங்கள்.',
+ dupNote:'மற்றவர்களும் இதே பிரச்சினையைச் சொல்லியுள்ளனர். உங்கள் புகார் இந்த எண்ணுடன் சேர்க்கப்பட்டது:',trkId:'புகார் எண் (எடுத்துக்காட்டு T-1001)',
+ trkNone:'இந்த எண்ணில் புகார் இல்லை. எண்ணைச் சரிபார்த்து மீண்டும் போடுங்கள்.',merged:'உங்கள் புகார் இந்த எண்ணுடன் இணைக்கப்பட்டது:',
+ thanksYes:'நன்றி. குழுவினர் மீண்டும் சோதித்து புகாரை முடிப்பார்கள்.',reopened:'நன்றி. புகாரை மீண்டும் திறந்துள்ளோம்.',
+ st1:'ஒருவரிடம் ஒப்படைக்கப்பட்டது',st4:'மீண்டும் சோதித்து உறுதி செய்யப்பட்டது',rate:'உங்களுக்கு எவ்வளவு திருப்தி? 1 முதல் 5 வரை தேர்ந்தெடுங்கள்',
+ offl:'இணையம் இல்லாமலும் வேலை செய்யும்',sms:'எழுத்துச் செய்தி மூலம் பயன்படுத்தலாம்',atOk:'பார்வையற்றோர் கருவியில் சோதிக்கப்பட்டது',
+ atBad:'பார்வையற்றோர் கருவியில் பிரச்சினை உள்ளது',atNo:'பார்வையற்றோர் கருவியில் இன்னும் சோதிக்கவில்லை',
+ fDev:'எந்த போன் பயன்படுத்துகிறீர்கள்?',fAt:'உதவி வசதி ஏதாவது பயன்படுத்துகிறீர்களா?',e_spam:'இணைய முகவரி அல்லது ஒரே எழுத்து திரும்பத் திரும்ப வருவதை நீக்கி மீண்டும் அனுப்புங்கள்',
+ tabServices:'எந்த சேவை எனக்கு வேலை செய்யும்?',svcIntro:'உங்கள் பகுதியில் சோதித்ததையும் மக்கள் சொன்ன புகார்களையும் வைத்து புதுப்பிக்கப்படுகிறது.',
+ sizeL:'எழுத்து அளவு',sizeN:'சாதாரணம்',sizeB:'பெரியது',
+ appName:'அனைவருக்கும் சேவை',appSub:'எல்லோராலும் இந்த சேவைகளைப் பயன்படுத்த முடிகிறதா?',logoAlt:'தமிழ்நாடு அரசு முத்திரை',
+ loginTitle:'உள்ளே செல்ல நீங்கள் யார்?',roleU:'குழு உறுப்பினர்',roleC:'ஒருங்கிணைப்பாளர்',uid:'உங்கள் பெயர்',mail:'மின்னஞ்சல் முகவரி',badMail:'சரியான மின்னஞ்சல் முகவரியைப் போடுங்கள்.',pw:'கடவுச்சொல்',loginBtn:'உள்ளே செல்',back:'பின்னால் செல்',logout:'வெளியேறு',
+ badLogin:'மின்னஞ்சல் அல்லது கடவுச்சொல் தவறு. மீண்டும் முயலுங்கள்.',demoU:'சோதனைக்கு: பெயர் member, கடவுச்சொல் 123456',demoC:'சோதனைக்கு: எந்த மின்னஞ்சலும் எந்த கடவுச்சொல்லும் போடலாம்',
+ read:'படித்துக் காட்டு',stop:'நிறுத்து',voiceOn:'குரல் உதவி: இயக்கத்தில்',voiceOff:'குரல் உதவி: நிறுத்தத்தில்',
+ noVoice:'இந்த போனில் தமிழ் குரல் இல்லை போல் தெரிகிறது. போன் அமைப்பில் தமிழ் குரலை பதிவிறக்கம் செய்து மீண்டும் முயலுங்கள்.'});
+Object.assign(T.en,{sizeN:'Normal',sizeB:'Large',appName:'Reach Check',appSub:'Can everyone use our digital services?',logoAlt:'Tamil Nadu Government logo',
+ loginTitle:'Who are you?',roleU:'Committee member',roleC:'Coordinator',uid:'User name',mail:'Email address',badMail:'Please enter a valid email address.',pw:'Password',loginBtn:'Log in',back:'Go back',logout:'Log out',
+ badLogin:'Wrong email or password. Try again.',demoU:'For testing: user name member, password 123456',demoC:'For testing: any email and any password will work',
+ read:'Read aloud',stop:'Stop',voiceOn:'Voice help: on',voiceOff:'Voice help: off',noVoice:'This phone seems to have no voice for this language. Install one in the phone settings and try again.'});
+TYPES.slow.ta='பக்கம் மிகவும் மெதுவாகத் திறக்கிறது அல்லது திறக்கவே இல்லை';TYPES.data.ta='இணைய டேட்டா அதிகம் செலவாகிறது';
+TYPES.reader.ta='படித்துச் சொல்லும் குரல் கருவி வேலை செய்யவில்லை';TYPES.small.ta='எழுத்து சிறியதாக உள்ளது, படிக்க முடியவில்லை';
+TYPES.stuck.ta='படிவத்தை நிரப்பி முடிக்க முடியவில்லை';TYPES.other.ta='வேறு பிரச்சினை';
+DEVICES.basic.ta='சாதாரண பட்டன் போன்';DEVICES.s2g.ta='மெதுவான இணையம் உள்ள ஸ்மார்ட்போன்';DEVICES.s4g.ta='வேகமான இணையம் உள்ள ஸ்மார்ட்போன்';DEVICES.pc.ta='கணினி';
+ATS.none.ta='எதுவும் இல்லை';ATS.reader.ta='படித்துச் சொல்லும் குரல் கருவி';ATS.voice.ta='பேசி இயக்கும் வசதி';ATS.mag.ta='எழுத்தைப் பெரிதாக்கும் வசதி';ATS.sw.ta='தொடாமல் இயக்கும் பொத்தான் வசதி';
+var SVC_TA={S1:'ரேஷன் அட்டை நிலை இணையதளம்',S2:'மருத்துவ முகாம் பதிவு (வாட்ஸ்அப்)',S3:'கல்வி உதவித்தொகை விண்ணப்பம்',S4:'உதவி எண் திரும்ப அழைப்பு',S5:'வார்டு புகார் செயலி',S6:'திறன் பயிற்சி பதிவு'};
+var AREA_TA={A1:'தண்டையார்பேட்டை',A2:'பூந்தமல்லி',A3:'செஞ்சி',A4:'ஹரூர்',A5:'கொல்லிமலை'};
+var LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALkAAADICAMAAACDDbAKAAAAwFBMVEUAAADr7OsnWDLw25rtymlPcVf2pyvfmpvWYWXg5tpni27stFaQppYTiAk4Y0WWq5uZrJ2irqXl4c15l4Tv3cexxrVuinXt3amzxrdYdV5qlWzZeIXeoKFweXOzzLXYOkjWLTJ5loPt4bjp3rKsxrG50sq70MS60MbpxDfcpqhcdWO7YmByj3lGkTt6mIXlqawAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB1FdxPAAAAMHRSTlMAGP73/ff+9vxX7v7k/v6gYRib6uSfpKZgoWz5qg8l/v+mLWDXKWWe/mJf9yTiYSACvBuqAAAqdElEQVR42q1dB4PbqBIWlrEN4tQl122xtyYv+f//7k0BhJrtzZ0ut+uV28cwfQaIoigSQtz8WUzd518P7nF4XwQvHd8vRl8g3NcUdwLC/6+9RIxQje93PxX/VMM7Qg3vzyGfefavkV8ZUdF/TTGLSvh3FVdo/o2fM8Ae6LEIfgYAGAVfD/xn9BB+QvgCD8nfLsJnhH+zCAb4EA52joI3CV7MsE0xzTBqlx8OmcGrqir6bb6+DvlOiR55x+whrhJffAf55HCLeRFQTdZqraVMF4MrlVJqvX9pSjHFVMXfsU34VzhnUfd4bvQdDz++XSo5AXkwABhBZd4KzwZqQJcR8Uf8ereEXpNT97Uqz42UATog+36/b9uXl5e2beEhEDwYVSpNliv/xf5zPPEf/gvdErL09IjeX7QDBZirl8Pv/E3xXPoLuD/Pv1qjpQevX3bib/XhNd0yJvjD5H1lHC1TYIO8cPwX/YpUGV0ujz384rHIjXHopTSPva8vZoxUNC+z0VVmmDVGIq+kkz9TWskFrWJlNIX7X9HgEkVGz1vwJh99S+G/fgrWw926pZhlGJVponaq91nHHUrSQFDDLPS+LQa4c01KBv437t2ZmnIevq1b7v6pMuYSab56TC30Qh/yXCmlF2ZE8AaGA1Kw+6qkfs+Zb1L5oqLAN/h7v0Xd4bco/lIpsx9DWdwvWn5QLczguWgn+V5RiFzKN/wYO3yQ1lmvRv1nHpfIW8atmyE0uPapRW5GyHE+8Nab1EW00zJHsWB1g9jxC16/43F911EEPqHvesmFHfgA+X4O+Xsqd/jbLCp4BqhOH+rokInvKsYrTz6M8QOrpkSjAh/rVlxBXg2ezFLGKtMD/jb8C9QN8V4K2MdaUU2a12/pFv6500SfCmUqr9LUqCvI9QB5y4zUpPxEnvpJ2fE8Evv9V7qlF++ISBJu5BMFk0waLRrCk0zJbIQ8I+Qgw5LeV0jZKc2clCSomRvsMZZQMSPKD4FJapgwxN84wWmGis705bRdaOUeDJA3ci9IwYBOB65+1elDIL6ZJvWe+xhqjmG+4beoQBPiV+K3gOMBgwDLgvfyAOLLQjLyr4Uc6hap3yKBI1IaPudVLx56vgF/gRH3eVx3O4q7iqSo4ZlNqx1aS/C1UKvJc08MPfIhJ2WLFvHBVF0AfiFDmrOFRZbRu/t1y9Vgk4PfzNEDLhgDqo2MpkCh0O4DdNJyS26yoeIRFXyCwBlCMwUeTDF8AX9NI67hnNMtYy/rD4gjTaS2XJFL4giB/KKIcXUnqeJdhXPZv+BzKmCFxwxkREy9gskuzetdQnqbVR6JU7wOI8iCR5CjIuRf40uoEdVfICiqtJu9iUu16Ga29+uWGdkkViElLgN7iZCzbgTZHPJzHJeB3qQPOEcG4o98Djjx24InU6kbyGdyA6i/FXhuYsec0mPHlCCDmkSeBM19jkolppDH285FEPZmLa7gRn5DSulSTEWghVPWQtw0Q6jF06pvclCvZOSBLHQBpIeXxbEQZyUor2L/iS0gj88990ap7TJW0VXo8PHI7Nnfx0TEKjh36cg9Ab2CQqqkbGEC0l1UxsutWi630XkbqViJbQm/4uVyGS/jSG1xVPCUiGgw2+vA4VtbC/1WvmWe8mwrX8Y6QLNmzHNh0vQSAcmXcZx8xCpe1oCthCmIlwkAB/RA+xJuKPillh8wlqW6gTx6zRj6EJAQY0d3xO10D4HLbIJEKKQl22x8HugbJ2uClSDiGP+tktUKfuGNmH7hDCSI/ByJG2T33ywCyorAhRLXdQu/ffKTNboYZE0NON1A8xixrggd/U+8Yn/Sb3yYAPDt8iOKtia/AT2z3/03fou4zAIHTy8HbQkqxmjkGkEMQnjdZWF3N5T9vY1XkfjVynZ3F/TrfosYmla618yxCr0NXL1UQyC5pxd0eGNL3iXMAFzJcjAE/ANFVHdG+Rr0RoyTdfN+C8/P7grFI4zBgN4LCxx0C4Ht2AMYA2Cv4FZiOQikwLERqT7tXP2r0PWb+G4u943U4cxnvoCAGogzvNpRKIMWOEIFhl+t4ph+AX4awCoh8YR/pBZzybHEEG4XrqDFQ5NXXPFOeol9ulRlgUOYqLV579EGvA/TVzugAwEjcgixB7AJ/hkj7BWxDWgavIMyCuDpbS/pYjFkGdDkqS466AuCLsQEZ8xIqALzSME7TBnm2voR515f2EJ33wjEBlCIk/iDYKNyXPKdZPVBT8JPVI8/GCWnisyup22RQyJnCluGAY/VnfkWg/NkwFvJpc7zFsUp+Hzrrje9bG3cu5Y9HdMJJyv1c4CzF1R9pSl8doXK60XrVqHJw6SAUnfmW/Aj9SVdZELLN2LsNHDCOQOwCEyrKEtArmoFkoo2tA6VIyOv+eYS1WMS27e+aZsZdR91SCW6LbkoOMtQkiDvwnrTtITakdHL80ZWjxCg55bjbJQWCUspHTqwnsqsAQEkmVBgFOCZuo6XbjDgb5XARO69iqEvHG/nMhWUNmgwiZZCLEu68W6Py3BgD871o7YObiNtKM8Rl2NGdyEaVoZEY3BViNuBM0Aqt4h86RU7iqkIPaCAY8A2N/gjuyClMIMqWidxdwTRmX2txSkpmQlzUDiPYNFne6tbrOZG3VeTaifkeDvwAWg4IXLjCgGc/cDUgMhTiTE2etMw5RWz+h0Sit63fAzMgTyctVQaEzuPbnbfBi41EdOyjDU4gZjW7iFTPUnKXgS0cJlFmDwpd5SU1IumQGfXiDOz+h1+CzE5yjk7RRCiSC3fDX5y4YAP/VSKIpZWdSydj1J2DoHzuWJyIzuag5qSPehmAdEATDHMBWhjYJdHUkFmjHzkAqPhsslW5j2aA40RdCHngKvSktpyR6AeE8/eS38r6cX7Ly6PjtBBszQoaZr9vQXMNMvdTd1SOFluNOUW2K6BOSrngTObL3vYEmsvu4EsA1VZ9ktfltvp+3JkVRTS4pLhCLDOg5jUDd1C42MTU2pKVYCTYspSS+F4vFLjuCBG5wosZZKwLgSDif46KRI2r6xTbICBgXVnN40x9qMpDWOQQxrKrAKfUC47I365rluQpyrHg3t8fSbB5IB8Oi2QVtL05fNVlZ3ZYXIzR6+SwHq6aYELdHsw9tyXSZlhUBO/gTJ8Ie1gp51k75qEClRBXuGhQGKQ/AAiY4wrIqcmK0bi2SkTxzRluUy8ZnFjQt+L7p6DjIDAKmmUWuWI+WmQK8M5S21tIz30ZbAxcrSP6UuYCQTx3ukMnCMHXJrXcUCtLCswwpWj9dI5AujieumlgW17oagQhWqsJ4C6t3JVbcw6iLfKoNcIrKTmdYseyJ8wGlyXnZJ2RtPJOEa5MNNGQmA2S2d8VBk7y+q0IzJSPJlPcI4AVr5cYKPA3wMtZxNqcxKaefHsqBGl0kirdGeCu3PcRWxsKLegbdA7j5deqdRxEKkm8Sii8C0NZL5V/pVhWYYrAjCEfEHZqRnkyjFWL1bWC8rz04fuimIiRNpaZu50OOEl5KBiAu2eeNoP0kV5J6Vp5h0Dw6UFjYysSVvP6Jase1tYOd63phP+9zHyHmBv+ykyAvylUyye5hxVi2H+uWsHyL03LanATi/9LZ19GUvoJMlJADvnYiJ9LOLE8zGbTGTvM5mj0AI5Y0Xu2HI5ylAjg+jA1LFXqg/CFWvsEwPkaITA7sspAXSyk1KZO5o2oJaUlMZCeFtRlyUrRA702O1dxlubMiqnREbsidtBpTyQrpFBFAnw0qzzXkKVWE0ZdhvHLq7kXthQOhovmdLsbtXe/iTOy/W0VxOTu+MCIJgUZHwZBoxM9EkJRV0+lV9xMVAxlxcJ2LeXLWKjY63qMoxKE0pADmt3ufSsXolHOSIViuH7VOupWYwKgQGvyLmcjlCcVAzcLfi34rCfw3+ieRhMI/LVSDHugnapLNqNC2CUQR4YI8Eq0USuKTIowFo9W2UPYobkTt+VVle7ZCglWCixawUhpujOZrricRkJTKmNueRU/cuwy2gTdb48gbff0AS07Z77InviuZgrS6lOaywto6Az6PjG5bVcLLfq/AM1/Xm292Kab9N2VD1H/gePkh03sJn7NitFEG5hz9Ukt2xdytl5sxT8l7F1z50TRgxC+Tny3HFizjPpxJ5SH7KLdvkubqqNKMWSHiB2RdTWEEtZPQrrr2Cf26x8Jt7DJaQfcam8UsF6hRPPj6WPSoldhh/5airfQrhoJ76Q9HY/9SywNKPVqybvTL1n+z3KubE5inS2fsmxc6m2ocWJy23s8nLL7Znj5yUFFUnSpauX8eCz3nTQZSqLaU4yg/5eTNm0lKMR71nbZluh3n4fdpbLU5k15TRblpZRPjpXPLYJi4/Vahl4Kj45gMwEqgWGMkKWH1rf0DjF6cguj32/hZW5TvOtTOFCTsH8bZ4GPcHFnDInnWGzWMgyH5RVId0CnsGKEH/gnbKOVU1MQ2oznlLComjm9XBjA9IOuaA6oUjlBaLl/T4iiwCj093kTVdHFLFFrJYD78RqxYD/bYJuq0g7srYpZ2SHvnbgb7MkcEAqAt2CRVnQLyCc5CmA9wPvzpQjuZ6r6igOjWNraeAnarzzNu6CO1b2zDXwgm2cOInuBdKBacvkHNHZXHa6xY4likJnEQaeO4/FFLMCyoBWzr9lk6TKsMZVk/1he7rsQg3kqJGibUzXDO4CYuy//KUuxmQR80Zo/YF/UsFap/BepSxdDvHx18PXdEmntHY94TyFT7B0mhyQ18T2cZCUIZ9xOYovwFdE4GnaRaHR629jrM7ZUzrIFewYuWGP6hF1Y/YmOHsr313wid20k8jBaUlWtha39FUuRXe5QkQ602V6rQgzwddT4agqmyzLWnZgaP4vru9boyeLDm0b6harJ6OC0tVto7AL7uXLa1f9Ms3nYHFib0G9P7sFXkb5XHFpl8ibMC+56WCJTZZzMmq8Sm+kBj7BhRop94EFrjhHQzaB/WZgtiRGzQunWab7WG0EStr7w6U7Az/cpQGYwsm6S8awLWV3YUj0AswoxnU829TvVjxaEssUPIKD5Ay41S2YTOoqYmVGQiIjGWa2p4D384lEb1QtNWl5Qs4eYpx8kG1id6wmJbRiWRXRXCRNelkEMmwWB+44OHQxUZv2A1CICfXCZNZ9yco5kostTzy1JXT+Yn22JilxKfWVdxdXVjuS4wVDGoUXrQ48AJFXHZvuFhFVAxYHt0AD+zaDNIxjtMxH/GBQm2LGw7V589gFEImtC3k3ixwVcA4/Vsw3K6s5LdeP88KiMd59aXIpO66WFWM1XreA05LiwoKmMgcbIxfSMYsLnoff8AM+ZdtjFVbcWCQiAQ2yFSy4iR8JKx3OT0/Np7NFYGMOWKAS6pwfDoYckBcfjXKPGbnDmDHVukXm2C2q0hkEDe+fdM6x+4bYlZPLqFOWy1FZtAQ/d2UTiiAZlt5eI51HRYSyVDs73xJAyXaPQkuNuw/cz1SwhJJvTshzXv0gpVFmsY9YSLJfjzN9NMQrABeFEUTQYVFnZePmhPm8rLuSS9zVkmzg1zdG6IBI2VVgFNVivUYHZQMExQGwbjmkttopXhXnENGDf7GKabb/Z+vLWhigJTFVP5fWMVx9kD6PXRKGBTnIy1jwq37KiKr1QaauodZSbS6lKMRvqkTAQHIXPr/0vBuV7SuYBOFqK1X7BWZgCrnvC0l8aRxHsFy5mHPlS0TssiCPU3MDqpaa3rYaBXUQ1yB/WAegpzKpY9bVL6yjuO8rxd/wGtlbsLc/TyC3/EADYC3tOp9qkkPU7TwrHP+vgHPqOOEpKLcJTcCPSU6s+Kv3g4ISu8DGpeXMYtGOdFPZLbbC9T8XMUVz528lHxbZsnOtrDMT5IZcyrSmF6otTk+f0bF8gZdnGD2Zu9BOt+ip0MlVyXlp5Byfd4oiIab1StAip3CfDRA3ASQ22MPqAI811IvCyP7yxok6IIUSLKFqGjmLdFWK+aycD40pEK1j1/3UwV8y8tjlK9j4xwnnLbgK0yuS5Afv1E5U6SN2HqVFvpNTyNvUM4vWlTGXQQStCAEEZ9ZKhtmixIokpVZWnUZ07YBBzWs58rowkCgal+vKJ2NR14wG0fP7xMqgcNZ4bcQg9wxfe/5hWT22VtI6guRxseu+co0KLMEu89/V2sN2V1xtevjC5cgW+e9xpgt1OOuWX4C8HGeyO9SgGH+/ibH9xLh+677fpSV8b0JCWnHp2l2WcZfRdfFFQmMJiA7+Vk+fL9LDuFUS+1Pt2s9ryKVBIzrB5UTyjyBui10M7dwwale0vQssopg8Ig+yjn2gEQeNOkHrhbvGyB8scpuYG4uw83nyoih8M9KAWxKbobVMsky6gJOnxIKr1dK2AhJmskArK6M4F95WPCij++upx+UGQu4ldB45+QsgodVLmw/rWtQPsvogffLhGKEs664KgIEcNnixWnRpDMSMcxOdbfR6HmQt9tpn0q8iB5b3yBWEry9NiDxwdMUo+Ry0mDlai21tM7nu3lnUNodHEWlcMp/UlHqhwWzH5S7b5jah9H5Z5KiDJKUsIremAkJoEeTNabG7Ns1DMVTmSMYkTBwS64CXWtdxrykHVf2K7A6+vl5ylcDiR1PgWRHgvBbRL68VJyQUFcp7J6HK2acUC+WY6vXh8z5rRovJz7Y+weGOtTXxMpTW2NKdbpXWW6TYCQNq1jZ2fKvllr4//9rjMmodOouHGZoHyAUEyr9S+TvPc1zb6ZBX9WQhEWaa6FrWy2VQzudM1gf3iFityKkLsjncuBAH6ReufiWcYXw31XCzg3ROt/xxRQwFCinD9WF2hdurCBwubUyzK4rHXiJ05Xoplq5eQUHckptzY5+K48TLsgs/nedrvWJmnK1dVx/9ai5Gdyp9FrlwyMsIF7Q18sBdLrII+HwsoZTBZZ3Nbgs4T/FqZWd/ldgZWa/j7akzQzHLaFyqs+9NSzjOS4a50dJ6ueOF98TndnlMQdb/AjbHgHDqlwI8tgfqcAytf7X/CpCzx8RLKBCRDSgYBsz9JtnYa72mJBH1cidhm27Q/doV04WCOLTBrT3s9x6mrb/XLYsmKoGqziduIdLzfgu2bOe/ip4lKoO0s6u/xZSC5uwP4vXX5jO2JcWlfZtV/Vs/gA9S6Zn0l//yCeQL67co6t7NAPmCahUA//0LkDtfEZeFT+a2Ol1uq/2W5uiGEOLEIV9Ty8jSdy1yun21LPkGFQPOvCJwKKHWVwwt+GXhPS6OLJSULxmEqMqk1Re8wZcTtYFAtLfLBpWdXUk8yLiAsUSbEyumeaxgiAh8QxHrVm29U8YszjNACRrrL4qmlTq0geyf5y1Mu+gl//3jFhTKHpjfYP5Lfsld1PQSRfB5bfbetfgDwnjruuIS1izn+gR8rc5KrH8SzU/iE34d1xu0W+U6Wpe+k6QrR39Y9aQ8WQ6Z7sVE3GLvPHVbXhHu8R6zWq8Hi/wgm0iNzb9/85ZzieihUMv8FhOJ5SfKI/z7/EwALjE4/qqRXeLyCM8do9iVXZZWot3EgT4yGL/kD+jf+Ua9PfeAYC0g62JP4/ItmDZCewRMBsgzqXPJpZcAtQZbuvPAOb/suJysIQA/AYFOpFDK9QmAb4jf6wigwx8i+twcS7ZMLl/kQhKKtaWMSCFo33m5SPfYoirbJpO+PVta5Mj7B0om2TIB0NooDezi+nE0MPohD/hcxF1Dtl+utQWinlQJUhYh3dcCh3CChyfgmGd4dMI3wkvOkZPooLUbp7CEcCgzoemnnouCdzbwezZgpqhxuVzMzu0iA2OtYMjI/5h2NN5BFz3/HB5Zfwm0CK7lQ+4tT+voc/0zjtYngXxCVH5+3hzpMQmsoCd+rtHN/KG63IY3tnYzkQfAL7u2MYYssA8u+yEoO5fmDrnLiHLiHR9idtd0aSLgFWPM75zsvyJH8WMJqmLr0tAgm+tPcQJYJJHr2rI8DSKqaRzATkdAvzmyQgchKbk1xsrtknZyUXT5vk4BU49m9N23e3AVztIf0xZfbsMALmXtWpOPIitu3aB8LGVCV55dFcJEUVQbBJ+sfyZEdtLqn+VP1u+b6KROxw15Zla/oKyctzE77fu9rujyyX+J4pZRbYKUpaEVCVRA98hdMkn43wPPBZfJPdgaKIqkohKzNZ5rs14r8QfQJj/J9hyPTwmM5ifSvlzTcHggqHVK12DsVqZZJ78a0YoUhdyB8KWqMNQgt7dNCwyynUuDeXcRk6ncEYN9FajEam6hBPh1XRvChUoE0B1BqSN7gDLEqQDu2RyP6yeAfBIqgVd9ClroSgsYsasEF9WhjVUq6ksoBvbY42yqtMKcvuY+nKyrQfcqXKNqk66dYgEO3LJrboNgiinr8wmV4NMGOIH1OOD9ibjxenrGP08Zyypc8NKSvQRO29UJr1tbcsureGu9B4DLPaxFNAo4/sD7Yhy6LhHQhOk4JVP4PkXcGqzNGjDT9Rb8DC63UXqcYspthKTdrAXyAmpCoO/meVPTKJ43zD7rhIQWuT+ykWicJMFaL/jAeNCARYrQWlTZUpI/x6piV4P2ldzBbg4DAa19dR980ZgW8qGSAL80RvNzJE5Gqm+eyhIgP8GH8ACSTyJ4dET0SVmSpJwVtpMpYEMIXKlnOhYQgzZdp3teFKJbwoSrxrgYF9Sgq8m+1oMMHfTWdsaxKtwS0ROXszodUYuwc4sEJ/jPcG0SYCPUOshBxPMbmjDcxGALbgOxe21DbtOLQRe60LSE9A3dJlDjb0zNNuwSuUz2ZHjXBdTKb8XKEHhxa6smtlWBhrElC/9s/XI0QsDmCfx5QnsEShx56Amfi0pXLNrGS5dLtSuOBjnotiFfFQKeF9R/2qbmshA5Bxez2SJdYH61pGzDD5swjKm3LOYlcTggK4EnUjA4CPzvuHli3sZ5wAdHwoiJuuWWdQtI+odNz5RF1tVCaeke0c3mIrBmhAFR2evL1ZROn8mhk15MtSprKnnyRXqRXSecAvRbkFNIHjdPZPMB9RNHdCTB9KiMXRVpuaWAw18IXgS1UGqt4IVS4I/kC/1qnfNu8yvffjlPdLyieLu1KoUvtiYrV0YpFXsopEE2yBngEjDz/2RvEdyv0na+urT0auWcddoegOILHbagiRyUZEM1cXzOOooBcrs/yPAyAfDV6OqiIYrPPl30ubH6z5pT/OPILtjaZTHcunSQ0bL2ihEm8kLrq4lJlDMrmOjPaekudhAVg31D9MT2FZFftrWIJoAz+i2tD0GruNkYVh5PT0nCWvJzzTb0KaFRAXJqPuJ10qiZqMPeDgPHFHWkqnyLdNcuTF1/BLjwnfNtOtV8Lricm06S3BE+Ifcr/mMlkdgiSqyziEr+Jz1O0BZxRybGFsmHzYD1rg65X9YkVNHvtOSdB31gncmpDAHVkBj7LHRarA3sHlk2B6BAdEZ94knYsITCw63tr5sggMMeBfZzqrvVdRT7xfSTZjTqEkbzyAnJ8hwxlVGjbIji4PZa28MOwBMQnQosU8iTTvajxXCvrKCOopXo9eUqbpx/Gw/zjTaFu0byFVcWVWT1H2vCBKIf4PQj+l7PTuM8H13/YjIh7f5mtJheqpJrZ0DtDnXdUlwTzakXs1xd4RYy5+cNquzjZr3prqNTh6xvUEKTxG7BMPgQuu+BTzZxI3HLwR4Lgn0X+VjQUqciuHifIhUnV2jOWxNElqOZ6Bx/+lkA7+UnxNi0E0MHsg/+IyD5YzG+tN9xIWwE4MW4cuJC5dpSm9zMtS25a/Iz2rChZEbvOIe5B/z0tdpG0XaLHTx+fSCxSYR/bG0yQC+mgSAJG79nVLgSqprfXXjP26FNX24rB4yOnYgS6ARdWnIBnIIJiCX8B/Y+F7cgnd/qOFj0N1wBPXO1tzZFYjzg2DrGpuvZUj5Jnmgof+75lEjOb8+c9Tf/cWTnLVUg6jO4Sxn49xJzTdhzSQ2lP8SP4BqTHsi+thnz52ccAjuJT+jm8iRAGKrOU+/ufTD1NeOXVgShwp15DLV++phitFYxo8QEmFeIstFeVSjNlaI98URvPbBnUM+u+Agj5mdkCU/w4ybanDY8iuf1Nl537ejdb/8JlI/HeBMsC7rdira0Sxc55jqpr2Jq3zkaOipGKQuPXFnk6T76Ma9bAnOCwY+IPteROhGbRJv1GTO7lG2M7/qILSF/9ciLlFLkmhbdzq6DNjaMGCJf3Iscwv0yEuc1fNpJrTEaWmMOvXw8gWH6V8jTdLD8vI+cov0p5O39yE9R9Ge9/hOVn8Aq6wjTiGsVQZx6osD15keUA+S/GDntiXJlj4Xs39A8IeTg5f9INn/EOgfAUVn/+VwbFZXr+0h+DXkGru3camK7c8tfc8tqe1ojNYDB1Tqqo2hdxz8+IWpG5OtklfwFtxDyt24B/dweCxlJ8F8jX4IzDsiPT38UeLhbzCaKEyJXhPw+mssAudwVCKh1y1Ov7N+iMZv318iTeoMfAg6twIgIkf9ZW5rfyS3bIfIUO6Kdx3JlFxTkqKqaQL5OhhcH7Kvg72Rdb04WebSGh5j+3Hjk/fcmXdAfXhPIcScqXtHiT0+Y2r/FcF10iFyU8eiqg62UbNdTuSmj6BOMJxaMVASRZ7lBBirXp8HuUUEdt3dXDJA/gA21iYAbe0NxpmKEfMJLwX7O4faUJ3TxwaNdRyXWtMB7VJjkjbBO1N+8+xXfns34LR3y/BdvOHZz9zZhu8BuIxeZAe0RfDfnzIAz0Pgj8og0O5Z1NwJoLqbebm4iL6ixfMc7997Y55/28BW3kBemNpWJhhslAoNTFl3VaJNARGNM232WNchrP9aKosq8m+kFiQPkuEvIPfvl8sZjN7kFKyHopvUoCSpQbTanE2WMBNJ8Dfp8cypRTEVv4O9VGkW1uYU86za7ub17G25NlkY3kdeYy+mxCwjoEety7KQDcszPYU13rWgggynDt99CTrs87gJWEVf3nSP9KRn0LJ8DZvjaINMBBD9ipvmJ0lvoNWKU9JOC50/+2ZG9MNk7KMuptYQh8lRTp4hQt/eG8stFF4vryHF/oT7J1RGLWKWrhB43gurmWKODoAIeJpvPkOhmWkB7yDlndOXoqBGrmxHyQRgK8WIJaq3Euqu9hcmVkzpFNhpFfX7iYu4ROwEofdTFT0JlJuO67SCq9cjfuKCv1BzyKYahrewqXDNgkT9q/T+4dHDhX//rHmA1d3M8bp6fuHZOgbQN5DYuo5Hrf7SO3Nv7n0c3NXtcj7i6mX3b+dOL7F4iRf9cFK6jmwD54p8r1+Kfy+dm49JC617CwmYt6Pq8/jFwNR75O+VR/MkuQgRHKF3bL5eg63uR/6MhBH1yJc81FYdcLt1nvZ42T+v4n3uRL2jDz8tf7CLulivch7xBzkAbWpd1TYE0VtzgoRsMFcDALbhF9A45UrxRV88QsTNQDHIJDP0u5AtdAz8c6/K0Bok7YUdLzXBrLh3F1NAAonqM76L5q3S9FcGBaRZowZx97XwiKqnq+5DHVOGv6+O6LNfceeGg0x+o4bnF6Nbk+azFxLaKN/wW5X4SdJndhXxN1ieO17apBd0VehzhBKzXW8D+fMRqwOU6ctYtuPeK3d9v/hy3aJStKopHe5egp3fw+YURq7q2clnbzqI1c3otTjyQ+5DTYRNGhEn+vm4pJiRU4f5j0u3EaKvCiPza1/0PaJ1QxxM2kGKdwnZaOOQwJrBL3EtyXUe9R35DV4EL5VR+yMXEKUUTMVEq21Zb2XDdAhDN7Q7XrvOJ+PzzJEohsK8i4HN0CsDvEoo8SBVd/aCDYuR0dI5Z6BLp2O7mtigMOOWdOv+A1rm9EWwbfO0qnQGy3VtHyze1bSWyxdHkeHPDeTLftAl3pMx7KzM8bKUY78g99LWAUbD++Kr9rl289XR+Iw+tuKYYE2oWTqvP1xs7CCpgRLfy2bxhm09n7cGIqksqb/otQra4CyREFw75g/2sTNzInW8c2Hq9DuzP+hiVpBTrNVYBzjdS8C+0YdtjlwBKK5z4VKurDBMhzasU92CUuksS0P7Wqb4O/UTlFEfcxPZYJK71zyamT9eB73BnxdSQ7qCmHT4WSwhNxwqE57qNJLTELWaEqpDPM/0QBXI6v2UBvX1tS0TgL7purp9Yqjuuu0rd5/VDOOzBNs6tNfIdyZbipkP69i7ieAZiVuE+UXxwFg8x54OP1BXkYLywDef5OfJA12GF8Xmj7iA47ubsspy5BGIBFdNKanUz34ItsKjPFY5TdTt3Kmom1De43fvj1h1PnOP79PT0vIluEzyFLxaUssXmCoKOGaBWiOvnE1m7j8cHiUbi2SkZKXbaGoh72K4eKyDWm8GFisYtubjG46LhBfud0UEGUQ2eqNfK9se9MZGRWUMb7eVkTp0I8C5jphBXeKY8dRcJbuT+usYrOz7KqlVuJ1awm1n6gtYEtPTLNw60MrSSVewAPoz91U6HJfstBfntyxpq7TfD2VVSovVs0Jog8G+cTojrovCkrwZzXcg2wDAoLd2pdv8ZbLv5qTSP/tQzleWgHmDaXyNxycT3zlWkKJoa12G6SG6ydA+33+xpkNnjf4JdFHaXtcrlgkTxtWNFnJEVmj0R8sphEXi2WqHTnA78AlWp2YFs7CZCL7t/jV3sWntqYO7PCmmtaMGEA79cOaXoyvlEFdAYdw8/S6nApipl1x/Z49UWcv/vGL47yTJT7pw1IFeVaYIOTp+ifU/mDxmfG9YjBkXwGeCuAau4AAVPlnDYce/Cv+N41Nd213NqEHaoGjraR9Me6KAiq+6QtO8dlhfJCvlbRzvabZdaKqxNsPMME93m38UO0ULmho6utzC6sV/5Aq5hfgDZzF5k9Q6/1N+dqqyyV9xA/FWQGUYfIBD00tgefSnDo3JvXrjM2W30hQt9gElQBWf79g3JdAGNrGlfaC3RE/j7M1t3qb4gt+OsabcY1ra05K4FGI8nvhTFjVPNIMC9BOcwm8bH6uReIX6FP/FMgV8Nn8A3f2ZrcfMYaxo+mV9cVheRoHaS0rTdKlRZ8ZZfEydZ7/KvLNivQuJuZZ2sHaKcTlUFs92kMt/JF9qBZj/lpRR3SKjz2t/4FFN0gFEn4mquXt9dHjYw0yJ7TaeHt609PVxXYV85ELvNlXcIBS+uxI/EQ1FpA3H9Xsl9KdubZ59dQU4CUsBMgqeMgn7B1aLAgGVZhKc1FXm4AYhbDEPXYO2dNnneT+O/46E2muoSFVY9lTFZJfHIGCGuEVfMNWf1fsMn73E/8reUImuDHWIv7hX2zHsS2f6uFL2F91JXF1WI/mGrIn/TuL83K6+LtOeqogEBpVDMAXuYOLN15mhLheez7QSuTssEMofZy0r0p4ZPNGwyYJEgI477yLUvfh/Srm7C+X9cJA9ioECGMDIo6UQFreD/7F+cCNkbkapo9Sv1JckDyGrLx802IcuVTWnJovzlk92gDuXLuzWX8FhfMHcpI0l6UKZZK2nz5BKXVdiq1hUzVExySVEENwr/BPoAwKlp9hsotCMbjV/mcPM65sxtUBowhqBzdglRbiMsWeGxDeKSIu4LeFzwdFXY8IAsk/hDquShn2cuxHX2nzoFFcgHspmC+DxmuOU0RntN2iIBW8QD+uCCiuHRxoDhT/glK3SWJe3sXJEuQbfiXZpqkSldYU3y5lnzd/oto/NbFcQuBthclxjRIscI9ODJiGB8vscu94t8mKqggWf/xikzg/g5sEQW11ppqxXFt5BzEP0QTEXhM7r+EL3uSSTYgb9Iy0diH1HAD3CP8CFtvlZEyryJ97KfijXMVsDEeHrgSwMOPrzrIcIkVqazMJUcZpX7sB7skw9/c2I7Lm7XDbuREQbY8ChHUoJ3pMRuv29UhISlTJlqTGMDcB0x2+C2gw0qSYgljCwEKZXJU+avH/N8A/nDrM4U2qiIplsgsX8jcv/Kg7xwjo+jQq6wsrcJdxoMtCC+zeHtuP20XUbx4FjlG2fN9+qohU+XFr25Gyqhgs5B1zj/wLS/KUQHbrpgRq2VjdJ0CsWBQlaqOlHWzCh6uZG7Rn6hQcNtkNi4TDUq29yLKFyFaHQM5H0S2ouYKEmCC8Uribwj0Qri9ukIFcMZQA7T+iV31lRhphI1D4nGIz7abTG8HUhfcZVJwmeL+87gnjk5Gn3tVEY78D0gKMiQOdCMg+TtUNH/gJu5wwMyISugtKaDarNo+ujh4ptnzYuR1hFikuq9n0zNnDZEJmVjTNpivtjgaUaGEzeF7zY3dFh7ftG7KPCYfgzYo1dxnu1LuCmhxTWC+y8pMmOsp5Qu0PxVWKIyj4+YEy66V9r80+Nrceso88ln7+lvuYl8RhDKDE8HIHZHRtbgKOjH4BOEus4S4ru6JfrLn0WnmNi5oPuPcF/tBAZBxlRm6EtHxU23476fV7jpuuYpZjyEbt9d37gyLy33E1x8328Jcc4ZqfEY/SiiOzB/n1VunzV/U2F2Vq8Qc/x/P0m/8/XRv2Pynr2+YsLuR17cC+L/5ya0fZCrWoMAAAAASUVORK5CYII=';
+var DEMO={user:['member','1234'],coord:['coord@reachcheck.in','123456']};
+function sn(s){return (ui.role==='user'&&ui.lang==='ta'&&SVC_TA[s.id])||s.name}
+function an(a){return (ui.role==='user'&&ui.lang==='ta'&&AREA_TA[a.id])||a.name+' ('+a.net+')'}
+function nf(){return state.notifs||(state.notifs=[])}
+function unread(){return nf().filter(function(n){return !n.read}).length}
+function notify(svc,id,type,area){var o=svcOf(svc).owner,tx='New report '+id+' ('+type+') in '+area+' for '+svcOf(svc).name+'. Please look at it.';
+  nf().unshift({to:o,svc:svc,id:id,text:tx,at:now(),read:false});
+  try{if(window.Notification&&Notification.permission==='granted')new Notification('Reach Check · '+o,{body:tx})}catch(e){}}
+function speak(txt){
+  var ss=window.speechSynthesis;if(!ss||!txt)return;
+  ss.cancel();var ta=ui.lang==='ta'&&(ui.stage!=='app'||ui.role==='user'),lang=ta?'ta-IN':'en-IN';
+  var u=new SpeechSynthesisUtterance(txt);u.lang=lang;u.rate=.9;
+  var vs=ss.getVoices(),v=vs.filter(function(x){return x.lang.replace('_','-').toLowerCase().indexOf(lang.slice(0,2))===0})[0];
+  if(v)u.voice=v;else if(ta&&vs.length){ui.msg={kind:'err',text:t('noVoice')};render()}
+  ss.speak(u);
+}
+function stopSpeak(){try{window.speechSynthesis.cancel()}catch(e){}}
+try{window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){}}catch(e){}
+function pie(items){var tot=items.reduce(function(a,i){return a+i.v},0);if(!tot)return '<p class="hint">No data yet.</p>';
+  var a0=-Math.PI/2,s='<svg viewBox="-110 -110 220 220" width="220" role="img" aria-label="Pie chart: '+esc(items.map(function(i){return i.l+' '+i.v}).join(', '))+'">';
+  items.filter(function(i){return i.v}).forEach(function(i){var a1=a0+i.v/tot*2*Math.PI;
+    if(i.v===tot)s+='<circle r="100" fill="'+i.c+'"/>';
+    else s+='<path d="M0 0L'+100*Math.cos(a0)+' '+100*Math.sin(a0)+'A100 100 0 '+(a1-a0>Math.PI?1:0)+' 1 '+100*Math.cos(a1)+' '+100*Math.sin(a1)+'Z" fill="'+i.c+'" stroke="#fff" stroke-width="2"/>';
+    a0=a1});
+  return s+'</svg><ul class="leg">'+items.map(function(i){return '<li><i style="background:'+i.c+'"></i><b>'+i.v+'</b> '+esc(i.l)+' ('+Math.round(i.v/tot*100)+'%)</li>'}).join('')+'</ul>'}
+function barc(items){var mx=Math.max.apply(null,items.map(function(i){return i.v}).concat([1]));
+  return '<div role="img" aria-label="Bar chart: '+esc(items.map(function(i){return i.l+' '+i.v}).join(', '))+'">'+items.map(function(i){return '<div style="margin:.5rem 0"><div><b>'+esc(i.l)+'</b>: '+i.v+'</div><div style="background:#E8ECF3;border-radius:6px"><div style="width:'+(i.v/mx*100)+'%;min-height:22px;background:'+i.c+';border-radius:6px"></div></div></div>'}).join('')+'</div>'}
+function chartsView(){
+  var act=state.alerts.filter(function(a){return a.status!=='closed'}),col={Critical:'#A81F14',High:'#D9631E',Medium:'#C9A100',Low:'#3F6FB5'};
+  var sev=['Critical','High','Medium','Low'].map(function(k){return {l:k+' alerts',v:act.filter(function(a){return a.sev===k}).length,c:col[k]}});
+  var pal=['#0A6B67','#D9631E','#3F6FB5','#7A3FB5','#A81F14','#6B7A3F'];
+  var ty=Object.keys(TYPES).map(function(k,i){return {l:TYPES[k].en,v:state.tickets.filter(function(x){return x.type===k}).length,c:pal[i]}});
+  var sv=state.services.map(function(s,i){return {l:s.name,v:state.tickets.filter(function(x){return x.svc===s.id}).length,c:pal[i%6]}});
+  return '<h2>Charts</h2><div class="grid g2" style="margin-bottom:1rem"><div class="card"><h3>Open alerts by severity</h3>'+pie(sev)+'</div><div class="card"><h3>Reports by problem type</h3>'+pie(ty)+'</div></div><div class="card" style="margin-bottom:1rem"><h3>Reports per service</h3>'+barc(sv)+'</div>';
+}
+function notifView(){
+  var ow=[];state.services.forEach(function(s){if(ow.indexOf(s.owner)<0)ow.push(s.owner)});
+  var f=ui.nOwner||'all',list=nf().filter(function(n){return f==='all'||n.to===f});
+  var perm=window.Notification?Notification.permission:'denied';
+  return '<h1>Notifications</h1><div class="filters"><div><label for="nOwner">Show notices for</label><select id="nOwner" data-filter="nOwner"><option value="all">Everyone</option>'+ow.map(function(o){return '<option'+(f===o?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></div></div>'+
+   '<div class="row" style="margin-bottom:1rem"><button class="btn" data-act="readall">Mark all as read</button>'+(perm==='default'?'<button class="btn" data-act="perm">Allow phone alerts</button>':'')+'</div>'+
+   (list.length?list.map(function(n){return '<article class="card'+(n.read?'':' unread')+'"><p><b>To: '+esc(n.to)+'</b> · '+esc(ago(n.at))+(n.read?'':' <span class="badge s-High">New</span>')+'</p><p>'+esc(n.text)+'</p></article>'}).join(''):'<p class="card">No notifications yet. When someone sends a report, the owner of that service gets a notice here.</p>');
+}
+function homeView(){
+  var act=state.alerts.filter(function(a){return a.status!=='closed'}),
+    unassigned=primary().filter(function(k){return k.status==='Open'}).length,
+    notV=primary().filter(function(k){return k.status!=='Verified'}).length,
+    od=act.filter(overdue).length,un=unread();
+  function card(tab,title,desc,n){return '<button class="card" style="text-align:left;font:inherit;cursor:pointer;width:100%;border:2px solid var(--brand)" data-act="ctab" data-v="'+tab+'"><h3>'+esc(title)+(n?'<span class="dot2">'+n+'</span>':'')+'</h3><span class="hint">'+esc(desc)+'</span></button>'}
+  var todo=[];
+  if(unassigned)todo.push(unassigned+' new report'+(unassigned>1?'s':'')+' not given to anyone yet');
+  if(od)todo.push(od+' alert'+(od>1?'s':'')+' waiting too long');
+  if(un)todo.push(un+' unread notice'+(un>1?'s':''));
+  return '<h1>Admin tasks</h1><section class="card"><h2>Today</h2>'+(todo.length?'<ul>'+todo.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'<p>Nothing is waiting. Good work.</p>')+'</section>'+
+   '<div class="grid g2">'+
+   card('dash','Dashboard and charts','Pie charts, bar chart, service health and area map',0)+
+   card('alerts','Alerts and risks','See each alert, mark it real or false, and acknowledge it',act.length)+
+   card('track','Status tracker','Give reports to a person and move them to fixed and checked',unassigned)+
+   card('data','Add data','Add test results, uptime and new services',0)+
+   card('eval','Evaluation','How fast and how correctly we find and fix problems',0)+
+   card('report','Reports','Make and copy the full report',0)+
+   card('notif','Notifications','Notices sent to service owners when a report arrives',un)+
+   card('pw','Change password','Set a new password for your login',0)+'</div>';
+}
+function pwView(){
+  return '<h1>Change password</h1><section class="card"><form id="f-pw" novalidate style="max-width:420px">'+
+   ctl('p-old','Current password','<input type="password" name="old" id="p-old" autocomplete="current-password">')+
+   ctl('p-new','New password (at least 6 characters)','<input type="password" name="nw" id="p-new" autocomplete="new-password">')+
+   ctl('p-new2','Type the new password again','<input type="password" name="nw2" id="p-new2" autocomplete="new-password">')+
+   '<button class="btn primary" type="submit">Save new password</button></form></section>';
+}
+function doLogin(){
+  try{var u=((document.getElementById('l-id')||{}).value||'').trim();
+    if(!u||u.indexOf('@')<1){ui.msg={kind:'err',text:t('badMail')};render();var f=document.getElementById('l-id');if(f)f.focus();say(t('badMail'));return}
+    ui.role='coord';ui.stage='app';ui.msg=null;ui.ctab='home';render();window.scrollTo(0,0);
+  }catch(e){alert('Login error: '+e.message)}
+}
+function wm(){return '<div class="wm" aria-hidden="true" style="background-image:url('+LOGO+')"></div>'}
+function gateLang(){return '<main class="gate" id="main" tabindex="-1"><img class="logo" src="'+LOGO+'" alt="தமிழ்நாடு அரசு முத்திரை"><h1>தமிழ்நாடு அரசு</h1><h2>உங்கள் மொழியைத் தேர்ந்தெடுங்கள்</h2><p>Choose your language</p><button class="bigbtn fill" data-act="lang" data-v="ta" lang="ta">தமிழ்</button><button class="bigbtn" data-act="lang" data-v="en" lang="en">English</button></main>'}
+function gateLogin(){
+  var h='<main class="gate" id="main" tabindex="-1"><img class="logo" src="'+LOGO+'" alt="'+esc(t('logoAlt'))+'"><h1>'+esc(t('loginTitle'))+'</h1>';
+  if(!ui.pick)h+='<button class="bigbtn fill" data-act="pick" data-v="user">'+esc(t('roleU'))+'</button><button class="bigbtn" data-act="pick" data-v="coord">'+esc(t('roleC'))+'</button>';
+  else h+='<h2>'+esc(t(ui.pick==='user'?'roleU':'roleC'))+'</h2><form id="f-login" novalidate style="text-align:left">'+ctl('l-id',t('mail'),'<input type="email" name="uid" id="l-id" autocomplete="email" autocapitalize="none" inputmode="email">')+ctl('l-pw',t('pw'),'<input type="password" name="pw" id="l-pw" autocomplete="current-password">')+'<button class="bigbtn fill" type="button" data-act="login">'+esc(t('loginBtn'))+'</button></form>'+banner()+'<p class="hint">'+esc(t('demoC'))+'</p>';
+  return h+'<button class="btn plain" data-act="back">'+esc(t('back'))+'</button></main>';
+}
+
+/* ---------- state ---------- */
+var state=null;
+var ui={stage:'lang',pick:null,voice:false,nOwner:'all',role:'user',utab:'report',ctab:'dash',msg:null,rv:{},re:{},done:null,track:'',trackMsg:null,
+  fKind:'all',fSev:'all',fStat:'active',fSvc:'all',tStat:'all',lang:'en',size:'normal',theme:'auto',evalMsg:null};
+function t(k){return (T[ui.lang]||T.en)[k]||T.en[k]||k}
+function save(){try{state.prefs={lang:ui.lang,size:ui.size,theme:ui.theme};localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function svcOf(id){return state.services.filter(function(s){return s.id===id})[0]||{name:id,owner:'—'}}
+function areaName(id){var a=state.areas.filter(function(x){return x.id===id})[0];return a?a.name:id}
+function areaNet(id){var a=state.areas.filter(function(x){return x.id===id})[0];return a?a.net:'?'}
+
+function seed(){
+  var n=now(),ago=function(h){return n-h*H};
+  var services=[
+   {id:'S1',name:'Ration card status portal',channel:'Website',owner:'Ravi',version:'2.4',offline:false,sms:false,contrast:3.2,wcag:3,uptime:97.2,err:4.1,checkedAt:ago(52)},
+   {id:'S2',name:'Health camp booking bot',channel:'WhatsApp',owner:'Meena',version:'1.8',offline:true,sms:false,contrast:5.1,wcag:0,uptime:99.9,err:0.4,checkedAt:ago(60)},
+   {id:'S3',name:'Scholarship application form',channel:'Website',owner:'Arun',version:'3.1',offline:false,sms:true,contrast:4.6,wcag:1,uptime:99.6,err:0.9,checkedAt:ago(70)},
+   {id:'S4',name:'Helpline callback',channel:'SMS / IVR',owner:'Divya',version:'1.2',offline:true,sms:true,contrast:7,wcag:0,uptime:99.95,err:0.2,checkedAt:ago(80)},
+   {id:'S5',name:'Ward grievance app',channel:'Android app',owner:'Suresh',version:'5.0',offline:false,sms:false,contrast:4.0,wcag:2,uptime:98.1,err:2.6,checkedAt:ago(45)},
+   {id:'S6',name:'Skill training registry',channel:'Website',owner:'Karthik',version:'2.0',offline:true,sms:false,contrast:4.8,wcag:0,uptime:99.8,err:0.6,checkedAt:ago(90)}
+  ];
+  var areas=[{id:'A1',name:'Tondiarpet',net:'4G'},{id:'A2',name:'Poonamallee',net:'3G'},{id:'A3',name:'Gingee',net:'3G'},{id:'A4',name:'Harur',net:'2G'},{id:'A5',name:'Kolli Hills',net:'2G'}];
+  var raw=[
+   ['S1','A1',2400,6.2,3.1,1,0,30],['S1','A2',2400,9.8,3.1,1,0,29],['S1','A3',2400,12.5,3.1,0,null,28],['S1','A4',2400,14.2,3.1,0,null,50],
+   ['S2','A1',90,1.2,0.2,1,1,40],['S2','A2',90,1.8,0.2,1,1,40],['S2','A4',90,2.6,0.2,1,null,60],['S2','A5',90,3.0,0.2,1,null,60],
+   ['S3','A1',1300,3.1,2.4,1,1,70],['S3','A3',1300,7.4,2.4,1,null,70],['S3','A4',1300,8.9,2.4,0,null,70],
+   ['S4','A1',10,0.8,0.05,1,1,90],['S4','A3',10,0.9,0.05,1,null,90],['S4','A4',10,1.0,0.05,1,1,90],['S4','A5',10,1.1,0.05,1,null,90],
+   ['S5','A1',3800,5.5,5.2,1,0,20],['S5','A2',3800,10.9,5.2,0,null,20],['S5','A5',3800,15.0,5.2,0,null,22],
+   ['S6','A1',800,2.2,1.1,1,1,100],['S6','A2',800,3.9,1.1,1,1,100],['S6','A3',800,4.3,1.1,1,null,100],['S6','A4',800,5.4,1.1,1,null,100]
+  ];
+  var tests=raw.map(function(r,i){return {id:'R'+(i+1),svc:r[0],area:r[1],kb:r[2],sec:r[3],mb:r[4],done:!!r[5],at:r[6]===null?null:!!r[6],when:ago(r[7])}});
+  function mk(num,svc,area,type,dev,at,desc,name,cH,o){
+    o=o||{};
+    return {id:'T-'+num,svc:svc,area:area,type:type,device:dev,at:at,desc:desc,name:name,createdAt:ago(cH),status:o.status||'Open',owner:o.owner||null,
+      assignedAt:o.aH!=null?ago(o.aH):null,startedAt:o.sH!=null?ago(o.sH):null,resolvedAt:o.rH!=null?ago(o.rH):null,verifiedAt:o.vH!=null?ago(o.vH):null,
+      rating:o.rating||null,userOk:!!o.rating,dupOf:o.dup||null};
+  }
+  var tickets=[
+   mk(1001,'S1','A4','slow','s2g','none','Page takes many minutes and then stops.',null,40),
+   mk(1002,'S1','A4','slow','s2g','none','Same here, it never finishes loading.',null,36,{dup:'T-1001'}),
+   mk(1003,'S1','A4','slow','basic','none','Cannot open the status page at all.',null,30,{dup:'T-1001'}),
+   mk(1004,'S1','A4','slow','s2g','none','Spinning wheel for ten minutes.','Lakshmi',20,{dup:'T-1001'}),
+   mk(1005,'S1','A4','slow','s2g','none','Still not loading this morning.',null,6,{dup:'T-1001'}),
+   mk(1006,'S5','A5','data','s2g','none','The app used my whole daily data pack in one try.','Selvi',20,{status:'Assigned',owner:'Suresh',aH:18}),
+   mk(1007,'S1','A1','reader','s4g','reader','TalkBack reads the buttons as "unlabelled".',null,60,{status:'In progress',owner:'Ravi',aH:58,sH:50}),
+   mk(1008,'S5','A1','reader','s4g','reader','I cannot submit a complaint with the screen reader.','Murugan',10,{status:'Assigned',owner:'Suresh',aH:8}),
+   mk(1009,'S3','A4','stuck','s2g','none','The form stops at the document upload step.',null,100,{status:'Resolved',owner:'Arun',aH:98,sH:90,rH:60}),
+   mk(1010,'S6','A4','small','s2g','mag','Text is very small on my phone.','Kala',200,{status:'Verified',owner:'Karthik',aH:198,sH:190,rH:150,vH:140,rating:4}),
+   mk(1011,'S2','A5','slow','basic','none','The bot replies very late.',null,120,{status:'Verified',owner:'Meena',aH:119,sH:115,rH:110,vH:100,rating:5}),
+   mk(1012,'S3','A3','data','s2g','none','Uploading photos uses too much data.',null,30),
+   mk(1013,'S4','A1','other','basic','none','The callback did not come after I requested it.',null,8),
+   mk(1014,'S6','A2','stuck','s2g','none','I could not finish the registration form.','Anbu',250,{status:'Verified',owner:'Karthik',aH:248,sH:240,rH:200,vH:190,rating:3}),
+   mk(1015,'S2','A1','reader','s4g','voice','Voice control cannot press the Send button.',null,180,{status:'Verified',owner:'Meena',aH:179,sH:170,rH:150,vH:140,rating:5})
+  ];
+  var rejected=[
+   {at:ago(5),source:'User report',reason:'Looks like spam (link or repeated characters)',snippet:'win a free phone http://…'},
+   {at:ago(26),source:'Test record',reason:'Load time 900 s is out of range (0 to 120 s)',snippet:'Ward grievance app · Harur'},
+   {at:ago(70),source:'User report',reason:'Description too short (min 10 characters)',snippet:'slow'}
+  ];
+  state={v:1,services:services,areas:areas,tests:tests,tickets:tickets,alerts:[],rejected:rejected,missed:1,
+    counts:{valid:services.length*2+tests.length+tickets.length,dup:4},prefs:null};
+  syncAlerts(true);
+  save();
+}
+
+/* ---------- detection engine ---------- */
+function latestTests(){
+  var m={};
+  state.tests.forEach(function(x){var k=x.svc+'|'+x.area;if(!m[k]||x.when>m[k].when)m[k]=x});
+  return Object.keys(m).map(function(k){return m[k]});
+}
+function testFlags(x){
+  var f=[],a=areaName(x.area),net=areaNet(x.area);
+  if(x.sec>10)f.push(['LOAD','Critical','Loads in '+x.sec+' s on '+net+' in '+a+' (limit 5 s)']);
+  else if(x.sec>5)f.push(['LOAD','High','Loads in '+x.sec+' s on '+net+' in '+a+' (limit 5 s)']);
+  if(x.kb>1024)f.push(['SIZE','Medium','Page weighs '+(x.kb/1024).toFixed(1)+' MB (limit 1 MB)']);
+  if(x.mb>2)f.push(['DATA','Medium','Uses '+x.mb+' MB per task (limit 2 MB)']);
+  if(x.at===false)f.push(['AT','Critical','Screen reader task failed in '+a]);
+  return f;
+}
+function candidates(){
+  var out=[],n=now(),lt=latestTests();
+  state.services.forEach(function(s){
+    var grp={};
+    lt.filter(function(x){return x.svc===s.id}).forEach(function(x){
+      testFlags(x).forEach(function(f){(grp[f[0]]=grp[f[0]]||[]).push({x:x,sev:f[1],detail:f[2]})});
+    });
+    Object.keys(grp).forEach(function(rule){
+      var g=grp[rule],worst=g[0];
+      g.forEach(function(i){if(RANK[i.sev]>RANK[worst.sev]||(RANK[i.sev]===RANK[worst.sev]&&i.x.sec>worst.x.sec))worst=i});
+      var areas=[];g.forEach(function(i){var nm=areaName(i.x.area);if(areas.indexOf(nm)<0)areas.push(nm)});
+      out.push({key:s.id+'|'+rule,kind:'risk',sev:worst.sev,svc:s.id,rule:rule,areas:areas,
+        detail:worst.detail+(g.length>1?' · '+g.length+' areas affected':''),action:ACTIONS[rule],
+        occurredAt:Math.max.apply(null,g.map(function(i){return i.x.when}))});
+    });
+    if(!s.offline&&!s.sms)out.push({key:s.id+'|OFFLINE',kind:'risk',sev:'Medium',svc:s.id,rule:'OFFLINE',areas:[],detail:'No offline, text-only or SMS option',action:ACTIONS.OFFLINE,occurredAt:s.checkedAt});
+    if(s.contrast<4.5)out.push({key:s.id+'|CONTRAST',kind:'risk',sev:'High',svc:s.id,rule:'CONTRAST',areas:[],detail:'Lowest colour contrast is '+s.contrast+':1 (needs 4.5:1)',action:ACTIONS.CONTRAST,occurredAt:s.checkedAt});
+    if(s.wcag>0)out.push({key:s.id+'|WCAG',kind:'risk',sev:'High',svc:s.id,rule:'WCAG',areas:[],detail:s.wcag+' critical WCAG A/AA failure'+(s.wcag>1?'s':''),action:ACTIONS.WCAG,occurredAt:s.checkedAt});
+    if(s.uptime<99)out.push({key:s.id+'|UPTIME',kind:'risk',sev:s.uptime<95?'High':'Medium',svc:s.id,rule:'UPTIME',areas:[],detail:'Uptime '+s.uptime+'% (target 99%), error rate '+s.err+'%',action:ACTIONS.UPTIME,occurredAt:s.checkedAt});
+    var blind=state.areas.filter(function(a){return !lt.some(function(x){return x.svc===s.id&&x.area===a.id})});
+    if(blind.length)out.push({key:s.id+'|BLIND',kind:'gap',sev:'Low',svc:s.id,rule:'BLIND',areas:blind.map(function(a){return a.name}),detail:'Never tested in '+blind.length+' area'+(blind.length>1?'s':''),action:ACTIONS.BLIND,occurredAt:s.checkedAt});
+  });
+  var groups={};
+  state.tickets.forEach(function(k){if(n-k.createdAt<=7*D)(groups[k.svc+'|'+k.area]=groups[k.svc+'|'+k.area]||[]).push(k)});
+  Object.keys(groups).forEach(function(g){
+    var arr=groups[g].sort(function(a,b){return a.createdAt-b.createdAt});
+    if(arr.length>=5){var p=g.split('|');
+      out.push({key:p[0]+'|CLUSTER|'+p[1],kind:'risk',sev:'High',svc:p[0],rule:'CLUSTER',areas:[areaName(p[1])],detail:arr.length+' user reports in 7 days from '+areaName(p[1]),action:ACTIONS.CLUSTER,occurredAt:arr[4].createdAt});}
+  });
+  state.tickets.filter(function(k){return !k.dupOf}).forEach(function(k){
+    if(k.status==='Open'&&n-k.createdAt>24*H)out.push({key:'GAP|UNASSIGNED|'+k.id,kind:'gap',sev:'High',svc:k.svc,rule:'UNASSIGNED',areas:[areaName(k.area)],detail:'Ticket '+k.id+' unassigned for '+dur(n-k.createdAt)+' (limit 24 h)',action:ACTIONS.UNASSIGNED,occurredAt:k.createdAt+24*H});
+    if(k.status==='Resolved'&&k.resolvedAt&&n-k.resolvedAt>48*H)out.push({key:'GAP|NORETEST|'+k.id,kind:'gap',sev:'Medium',svc:k.svc,rule:'NORETEST',areas:[areaName(k.area)],detail:'Ticket '+k.id+' fixed '+dur(n-k.resolvedAt)+' ago, no re-test yet',action:ACTIONS.NORETEST,occurredAt:k.resolvedAt+48*H});
+  });
+  return out;
+}
+function syncAlerts(seedMode){
+  var c=candidates(),n=now(),keys={};
+  c.forEach(function(x){
+    keys[x.key]=1;
+    var idx=-1;state.alerts.forEach(function(a,i){if(a.key===x.key)idx=i});
+    var a=idx>=0?state.alerts[idx]:null;
+    if(a&&a.status!=='closed'){a.sev=x.sev;a.detail=x.detail;a.areas=x.areas;a.action=x.action;return}
+    var na={key:x.key,kind:x.kind,sev:x.sev,svc:x.svc,rule:x.rule,areas:x.areas,detail:x.detail,action:x.action,occurredAt:x.occurredAt,
+      detectedAt:n,ackedAt:null,status:'open',label:null,closedAt:null};
+    if(seedMode){
+      var h=hs(x.key);
+      na.detectedAt=x.occurredAt+(10+h%80)*60000;
+      var ackIt=(x.sev==='Critical'&&x.key!=='S5|AT')||(x.sev!=='Critical'&&h%3!==0);
+      if(ackIt){na.ackedAt=na.detectedAt+(30+h%150)*60000;na.status='ack';na.label=SEED_FP[x.key]?'fp':'tp'}
+    }
+    if(a)state.alerts[idx]=na;else state.alerts.push(na);
+  });
+  state.alerts.forEach(function(a){if(a.status!=='closed'&&!keys[a.key]){a.status='closed';a.closedAt=n}});
+}
+
+/* ---------- helpers ---------- */
+function dur(ms){ms=Math.abs(ms);var m=ms/60000;if(m<60)return Math.max(1,Math.round(m))+' min';var h=m/60;if(h<72)return (h<10?h.toFixed(1):Math.round(h))+' h';return Math.round(h/24)+' d'}
+function ago(ts){return dur(now()-ts)+' ago'}
+function opt(list,sel,lbl){return list.map(function(o){var v=o[0],l=o[1];return '<option value="'+esc(v)+'"'+(String(sel)===String(v)?' selected':'')+'>'+esc(l)+'</option>'}).join('')}
+function bars(n){var hs=[7,12,17,23],s='<svg class="bars" viewBox="0 0 30 26" aria-hidden="true">';for(var i=0;i<4;i++)s+='<rect class="'+(i<n?'':'off')+'" x="'+(i*8)+'" y="'+(26-hs[i])+'" width="6" height="'+hs[i]+'" rx="1.5"/>';return s+'</svg>'}
+function health(id){
+  var s=100;state.alerts.forEach(function(a){if(a.svc===id&&a.status!=='closed'&&a.kind==='risk')s-=a.sev==='Critical'?20:a.sev==='High'?10:a.sev==='Medium'?5:0});
+  s=Math.max(0,s);return {score:s,n:s>=85?4:s>=65?3:s>=40?2:1};
+}
+var HLABEL={4:'Good',3:'Watch',2:'At risk',1:'Failing'};
+function dueOf(a){return a.detectedAt+SLA_A[a.sev]}
+function overdue(a){return a.status==='open'&&now()>dueOf(a)}
+function primary(){return state.tickets.filter(function(k){return !k.dupOf})}
+function dupCount(id){return state.tickets.filter(function(k){return k.dupOf===id}).length}
+function ticketSLA(k){var lim=SLA_T[TYPES[k.type].sev];var end=k.resolvedAt||now();return {lim:lim,breach:(end-k.createdAt)>lim,left:lim-(now()-k.createdAt)}}
+function mean(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null}
+function pct(v){return v==null?'—':Math.round(v*100)+'%'}
+function say(s){var l=document.getElementById('live');if(l)l.textContent=s}
+function reject(src,reason,snip){state.rejected.unshift({at:now(),source:src,reason:reason,snippet:snip||''})}
+
+/* ---------- evaluation ---------- */
+function evalMetrics(){
+  var al=state.alerts;
+  var tp=al.filter(function(a){return a.label==='tp'}).length,fp=al.filter(function(a){return a.label==='fp'}).length,fn=state.missed;
+  var P=tp+fp?tp/(tp+fp):null,R=tp+fn?tp/(tp+fn):null,F=(P&&R)?2*P*R/(P+R):null;
+  var mttd=mean(al.map(function(a){return a.detectedAt-a.occurredAt}));
+  var mtta=mean(al.filter(function(a){return a.ackedAt}).map(function(a){return a.ackedAt-a.detectedAt}));
+  var prim=primary(),res=prim.filter(function(k){return k.resolvedAt});
+  var mttr=mean(res.map(function(k){return k.resolvedAt-k.createdAt}));
+  var mttrC=mean(res.filter(function(k){return TYPES[k.type].sev==='Critical'}).map(function(k){return k.resolvedAt-k.createdAt}));
+  var met=0,br=0;
+  prim.forEach(function(k){var lim=SLA_T[TYPES[k.type].sev];if(k.resolvedAt){(k.resolvedAt-k.createdAt<=lim)?met++:br++}else if(now()-k.createdAt>lim)br++});
+  var lb=state.tests.filter(function(x){var n=areaNet(x.area);return n==='2G'||n==='3G'});
+  var atT=state.tests.filter(function(x){return x.at!==null});
+  var fixed=prim.filter(function(k){return k.status==='Resolved'||k.status==='Verified'});
+  var ver=prim.filter(function(k){return k.status==='Verified'});
+  var rated=state.tickets.filter(function(k){return k.rating});
+  var lt=latestTests(),pairs=state.services.length*state.areas.length;
+  return {tp:tp,fp:fp,fn:fn,unl:al.filter(function(a){return !a.label}).length,P:P,R:R,F:F,FA:(tp+fp)?fp/(tp+fp):null,
+    mttd:mttd,mtta:mtta,mttr:mttr,mttrC:mttrC,sla:(met+br)?met/(met+br):null,
+    tcLB:lb.length?lb.filter(function(x){return x.done}).length/lb.length:null,
+    tcAT:atT.length?atT.filter(function(x){return x.at}).length/atT.length:null,
+    mb:mean(state.tests.map(function(x){return x.mb})),
+    verRate:fixed.length?ver.length/fixed.length:null,
+    sat:rated.length?mean(rated.map(function(k){return k.rating})):null,
+    cov:pairs?lt.length/pairs:null};
+}
+function evalRows(m){
+  var HR=H/1;
+  function ok(v,test){return v==null?null:test(v)}
+  return [
+   ['Detection accuracy','Precision (correct alerts ÷ all alerts)',pct(m.P),'≥ 85%',ok(m.P,function(v){return v>=.85})],
+   ['Detection accuracy','Recall (real issues found ÷ all real issues)',pct(m.R),'≥ 90%',ok(m.R,function(v){return v>=.9})],
+   ['Detection accuracy','F1-score',m.F==null?'—':m.F.toFixed(2),'≥ 0.87',ok(m.F,function(v){return v>=.87})],
+   ['Detection accuracy','False alarm rate',pct(m.FA),'≤ 10%',ok(m.FA,function(v){return v<=.10})],
+   ['Response time','MTTD (mean time to detect)',m.mttd==null?'—':dur(m.mttd),'< 1 h',ok(m.mttd,function(v){return v<HR})],
+   ['Response time','MTTA (mean time to acknowledge)',m.mtta==null?'—':dur(m.mtta),'< 4 h',ok(m.mtta,function(v){return v<4*HR})],
+   ['Response time','MTTR for critical tickets',m.mttrC==null?'—':dur(m.mttrC),'< 48 h',ok(m.mttrC,function(v){return v<48*HR})],
+   ['Response time','MTTR for all tickets',m.mttr==null?'—':dur(m.mttr),'tracked',null],
+   ['Response time','SLA compliance',pct(m.sla),'≥ 90%',ok(m.sla,function(v){return v>=.9})],
+   ['Service effectiveness','Task completion on 2G/3G',pct(m.tcLB),'≥ 90%',ok(m.tcLB,function(v){return v>=.9})],
+   ['Service effectiveness','Task completion with assistive tech',pct(m.tcAT),'≥ 85%',ok(m.tcAT,function(v){return v>=.85})],
+   ['Service effectiveness','Average data per task',m.mb==null?'—':m.mb.toFixed(1)+' MB','≤ 2 MB',ok(m.mb,function(v){return v<=2})],
+   ['Service effectiveness','Fix verification rate (fixed and re-tested)',pct(m.verRate),'100%',ok(m.verRate,function(v){return v>=.999})],
+   ['Service effectiveness','User satisfaction after fix',m.sat==null?'—':m.sat.toFixed(1)+' / 5','≥ 4 / 5',ok(m.sat,function(v){return v>=4})],
+   ['Service effectiveness','Coverage (service × area pairs tested)',pct(m.cov),'≥ 90%',ok(m.cov,function(v){return v>=.9})]
+  ];
+}
+
+/* ---------- views: shared ---------- */
+function head(){
+  return '<header class="top"><div class="wrap"><div class="brand"><img class="logo" src="'+LOGO+'" alt="'+esc(t('logoAlt'))+'"><div><b>'+esc(t('appName'))+'</b><span>'+esc(t('appSub'))+'</span></div></div>'+
+   '<div class="prefs">'+(ui.role==='user'?'<label>'+esc(t('langL'))+'<select data-set="lang"><option value="en"'+(ui.lang==='en'?' selected':'')+'>English</option><option value="ta"'+(ui.lang==='ta'?' selected':'')+'>தமிழ்</option></select></label>':'')+
+   '<label>'+esc(t('sizeL'))+'<select data-set="size"><option value="normal"'+(ui.size==='normal'?' selected':'')+'>'+esc(t('sizeN'))+'</option><option value="large"'+(ui.size==='large'?' selected':'')+'>'+esc(t('sizeB'))+'</option></select></label>'+
+   '<button class="btn sm" data-act="voicetog" aria-pressed="'+ui.voice+'">'+esc(t(ui.voice?'voiceOn':'voiceOff'))+'</button>'+
+   '<button class="btn sm plain" data-act="logout">'+esc(t('logout'))+'</button></div></div></header>';
+}
+function foot(){if(ui.role==='user')return '';
+  return '<footer><div class="wrap">This page is about '+PAGE_KB+' KB and makes no outside requests, so it follows its own rules: light enough for 2G, readable with a screen reader. Sample data is stored only in this browser. '+
+   (ui.role==='coord'?'<button class="btn sm plain" data-act="reset">Reset sample data</button>':'')+'</div></footer>';
+}
+function banner(){
+  if(!ui.msg)return '';
+  return '<div class="banner '+(ui.msg.kind==='err'?'err':'ok')+'" role="'+(ui.msg.kind==='err'?'alert':'status')+'">'+esc(ui.msg.text)+'</div>';
+}
+function sevBadge(s){return '<span class="badge s-'+s+'">'+s+'</span>'}
+
+/* ---------- views: community member ---------- */
+function userView(){
+  var tabs=[['report',t('tabReport')],['track',t('tabTrack')],['services',t('tabServices')]];
+  return '<nav class="sub" aria-label="Sections">'+tabs.map(function(x){return '<button class="btn" data-act="utab" data-v="'+x[0]+'"'+(ui.utab===x[0]?' aria-current="page"':'')+'>'+esc(x[1])+'</button>'}).join('')+'</nav>'+
+    (ui.utab==='report'?reportView():ui.utab==='track'?trackView():servicesView());
+}
+function ctl(id,label,html,err,hint){
+  return '<div class="field'+(err?' bad':'')+'"><label for="'+id+'">'+esc(label)+'</label>'+html+(hint?'<p class="hint">'+esc(hint)+'</p>':'')+(err?'<p class="err" id="'+id+'-e">'+esc(err)+'</p>':'')+'</div>';
+}
+function dsc(id,err){return ' id="'+id+'"'+(err?' aria-invalid="true" aria-describedby="'+id+'-e"':'')}
+function reportView(){
+  if(ui.done){
+    var d=ui.done;
+    return '<section class="card"><h1>'+esc(t('gotIt'))+'</h1><p>'+esc(t('yourId'))+'</p><p class="idbig">'+esc(d.id)+'</p>'+
+      (d.dup?'<p>'+esc(t('dupNote'))+' <b>'+esc(d.dup)+'</b>.</p>':'')+'<p>'+esc(t('keepId'))+'</p>'+
+      '<button class="btn primary" data-act="another">'+esc(t('another'))+'</button></section>';
+  }
+  var v=ui.rv,e=ui.re,L=ui.lang;
+  var svcs=state.services.map(function(s){return [s.id,sn(s)]}),areas=state.areas.map(function(a){return [a.id,an(a)]});
+  var types=Object.keys(TYPES).map(function(k){return [k,TYPES[k][L]]});
+  var devs=Object.keys(DEVICES).map(function(k){return [k,DEVICES[k][L]]});
+  var ats=Object.keys(ATS).map(function(k){return [k,ATS[k][L]]});
+  var ph='<option value="">'+esc(t('choose'))+'</option>';
+  return '<section class="card"><h1>'+esc(t('repTitle'))+'</h1><p class="hint">'+esc(t('repIntro'))+'</p>'+
+   '<form id="f-report" novalidate>'+
+   ctl('r-svc',t('fSvc'),'<select name="svc"'+dsc('r-svc',e.svc)+'>'+ph+opt(svcs,v.svc)+'</select>',e.svc)+
+   ctl('r-area',t('fArea'),'<select name="area"'+dsc('r-area',e.area)+'>'+ph+opt(areas,v.area)+'</select>',e.area)+
+   ctl('r-type',t('fType'),'<select name="type"'+dsc('r-type',e.type)+'>'+ph+opt(types,v.type)+'</select>',e.type)+
+   '<div class="grid g2"><div>'+ctl('r-device',t('fDev'),'<select name="device" id="r-device">'+opt(devs,v.device||'s2g')+'</select>')+'</div>'+
+   '<div>'+ctl('r-at',t('fAt'),'<select name="at" id="r-at">'+opt(ats,v.at||'none')+'</select>')+'</div></div>'+
+   ctl('r-desc',t('fDesc'),'<textarea name="desc"'+dsc('r-desc',e.desc)+'>'+esc(v.desc||'')+'</textarea>',e.desc)+
+   '<div class="field"><label class="check"><input type="checkbox" name="anon" value="1"'+(v.anon?' checked':'')+'><span>'+esc(t('fAnon'))+'</span></label></div>'+
+   ctl('r-name',t('fName'),'<input type="text" name="name" id="r-name" autocomplete="name" value="'+esc(v.name||'')+'">')+
+   '<div class="field'+(e.consent?' bad':'')+'"><label class="check"><input type="checkbox" name="consent" value="1"'+dsc('r-consent',e.consent)+(v.consent?' checked':'')+'><span>'+esc(t('fConsent'))+'</span></label>'+(e.consent?'<p class="err" id="r-consent-e">'+esc(e.consent)+'</p>':'')+'</div>'+
+   '<button class="btn primary" type="submit">'+esc(t('send'))+'</button></form></section>';
+}
+function trackView(){
+  var out='<section class="card"><h1>'+esc(t('trkTitle'))+'</h1><form id="f-track" class="row" novalidate><div style="flex:1;min-width:200px"><label class="sr" for="trk">'+esc(t('trkId'))+'</label><input type="text" id="trk" name="id" placeholder="'+esc(t('trkId'))+'" value="'+esc(ui.track)+'" autocapitalize="characters"></div><button class="btn primary" type="submit">'+esc(t('trkGo'))+'</button></form></section>';
+  if(ui.track){
+    var id=ui.track.trim().toUpperCase();if(/^\d+$/.test(id))id='T-'+id;
+    var k=state.tickets.filter(function(x){return x.id===id})[0];
+    if(!k)return out+'<div class="banner err" role="alert">'+esc(t('trkNone'))+'</div>';
+    var main=k.dupOf?state.tickets.filter(function(x){return x.id===k.dupOf})[0]||k:k;
+    var idx={Open:0,Assigned:1,'In progress':2,Resolved:3,Verified:4}[main.status];
+    var ts=[main.createdAt,main.assignedAt,main.startedAt,main.resolvedAt,main.verifiedAt];
+    out+='<section class="card"><h2>'+esc(k.id)+' · '+esc(sn(svcOf(k.svc)))+'</h2><p class="meta">'+esc(TYPES[k.type][ui.lang])+' · '+esc(areaName(k.area))+'</p>'+
+      (k.dupOf?'<p>'+esc(t('merged'))+' <b>'+esc(main.id)+'</b>.</p>':'')+'<ol class="steps">';
+    for(var i=0;i<5;i++){
+      var cls=i<idx||(i===idx&&idx===4)?'done':i===idx?'now':'';
+      var lab=cls==='done'?t('stDone'):cls==='now'?t('stNow'):t('stWait');
+      out+='<li class="'+cls+'"><span class="dot" aria-hidden="true">'+(cls==='done'?'✓':(i+1))+'</span><div><b>'+esc(t('st'+i))+'</b><br><span class="meta">'+esc(lab)+(ts[i]&&cls?' · '+esc(ago(ts[i])):'')+'</span></div></li>';
+    }
+    out+='</ol>';
+    if(main.status==='Resolved'&&!main.userOk){
+      out+='<h3 style="margin-top:1rem">'+esc(t('fixQ'))+'</h3><div class="field"><label for="rate">'+esc(t('rate'))+'</label><select id="rate" style="max-width:120px"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>'+
+        '<div class="row"><button class="btn primary" data-act="fix" data-v="yes" data-id="'+esc(main.id)+'">'+esc(t('yes'))+'</button><button class="btn" data-act="fix" data-v="no" data-id="'+esc(main.id)+'">'+esc(t('no'))+'</button></div>';
+    }
+    if(ui.trackMsg)out+='<div class="banner ok" role="status" style="margin-top:1rem">'+esc(ui.trackMsg)+'</div>';
+    out+='</section>';
+  }
+  return out;
+}
+function servicesView(){
+  var lt=latestTests();
+  return '<section><h1>'+esc(t('svcTitle'))+'</h1><p class="hint">'+esc(t('svcIntro'))+'</p><div class="grid g2">'+
+  state.services.map(function(s){
+    var h=health(s.id),mine=lt.filter(function(x){return x.svc===s.id});
+    var atT=mine.filter(function(x){return x.at!==null});
+    var atTxt=!atT.length?t('atNo'):atT.some(function(x){return x.at===false})?t('atBad'):t('atOk');
+    var last=mine.length?Math.max.apply(null,mine.map(function(x){return x.when})):null;
+    return '<article class="card svc"><span class="h-'+h.n+'">'+bars(h.n)+'</span><div><h3>'+esc(sn(s))+'</h3><p><b>'+esc(t('h'+h.n))+'</b></p>'+
+      '<ul style="margin:0;padding-left:1.1rem"><li>'+esc(t('offl'))+': <b>'+esc(s.offline?t('yesW'):t('noW'))+'</b></li><li>'+esc(t('sms'))+': <b>'+esc(s.sms?t('yesW'):t('noW'))+'</b></li><li>'+esc(atTxt)+'</li></ul>'+
+      (last?'<p class="meta" style="margin-top:.4rem">'+esc(t('tested'))+': '+esc(ago(last))+'</p>':'')+'</div></article>';
+  }).join('')+'</div></section>';
+}
+
+/* ---------- views: coordinator ---------- */
+var CTABS=[['home','Admin home'],['dash','Dashboard'],['alerts','Alerts and risks'],['track','Status tracker'],['data','Data in'],['eval','Evaluation'],['report','Reports'],['notif','Notifications'],['pw','Change password']];
+function coordView(){
+  return '<nav class="sub" aria-label="Coordinator sections">'+CTABS.map(function(x){return '<button class="btn" data-act="ctab" data-v="'+x[0]+'"'+(ui.ctab===x[0]?' aria-current="page"':'')+'>'+x[1]+(x[0]==='notif'&&unread()?'<span class="dot2">'+unread()+'</span>':'')+'</button>'}).join('')+'</nav>'+
+    ({dash:dashView,alerts:alertsView,track:trackerView,data:dataView,eval:evalView,report:reportTab,notif:notifView,pw:pwView,home:homeView}[ui.ctab])();
+}
+function dashView(){
+  var act=state.alerts.filter(function(a){return a.status!=='closed'});
+  var crit=act.filter(function(a){return a.sev==='Critical'}).length;
+  var openT=primary().filter(function(k){return k.status!=='Verified'});
+  var br=openT.filter(function(k){return ticketSLA(k).breach}).length;
+  var m=evalMetrics();
+  var top=act.slice().sort(function(a,b){return (overdue(b)-overdue(a))||(RANK[b.sev]-RANK[a.sev])||(a.detectedAt-b.detectedAt)}).slice(0,5);
+  var lt=latestTests();
+  var out='<h1>Dashboard</h1><div class="grid g4" style="margin-bottom:1rem">'+
+   '<div class="card kpi"><b>'+crit+'</b><span>Critical alerts open</span></div>'+
+   '<div class="card kpi"><b>'+openT.length+'</b><span>Tickets not yet verified</span></div>'+
+   '<div class="card kpi"><b>'+br+'</b><span>Tickets past SLA</span></div>'+
+   '<div class="card kpi"><b>'+pct(m.cov)+'</b><span>Coverage: service × area pairs tested</span></div></div>';
+  out+=chartsView();out+='<h2>Needs attention now</h2>'+(top.length?top.map(alertCard).join(''):'<p class="card">No open alerts. Add test data or wait for new reports.</p>');
+  out+='<h2 style="margin-top:1.25rem">Service health</h2><div class="grid g2">'+state.services.map(function(s){
+    var h=health(s.id),n=act.filter(function(a){return a.svc===s.id}).length;
+    return '<article class="card svc"><span class="h-'+h.n+'">'+bars(h.n)+'</span><div><h3>'+esc(s.name)+'</h3><p class="meta">'+esc(s.channel)+' · owner '+esc(s.owner)+' · v'+esc(s.version)+'</p><p><b>'+HLABEL[h.n]+'</b> · score '+h.score+'/100 · '+n+' active alert'+(n===1?'':'s')+'</p></div></article>';
+  }).join('')+'</div>';
+  out+='<h2 style="margin-top:1.25rem">Area coverage map</h2><p class="hint">Each cell shows the worst finding from the latest test (load time on that area\'s network).</p><div class="card scroll"><table><thead><tr><th scope="col">Service</th>'+
+    state.areas.map(function(a){return '<th scope="col">'+esc(a.name)+'<br><span class="meta">'+a.net+'</span></th>'}).join('')+'</tr></thead><tbody>'+
+    state.services.map(function(s){
+      return '<tr><th scope="row">'+esc(s.name)+'</th>'+state.areas.map(function(a){
+        var x=lt.filter(function(y){return y.svc===s.id&&y.area===a.id})[0];
+        if(!x)return '<td class="cell s-None">— not tested</td>';
+        var f=testFlags(x),w='OK';f.forEach(function(q){if(w==='OK'||RANK[q[1]]>RANK[w])w=q[1]});
+        var sym=w==='OK'?'✓':w==='Medium'?'!':w==='High'?'!!':'✕';
+        return '<td class="cell s-'+w+'">'+sym+' '+x.sec+' s<br><span class="meta" style="color:inherit">'+w+'</span></td>';
+      }).join('')+'</tr>';
+    }).join('')+'</tbody></table></div>';
+  return out;
+}
+function alertCard(a){
+  var s=svcOf(a.svc),od=overdue(a),due=dueOf(a);
+  var lab=a.label==='tp'?'<span class="badge s-OK">Confirmed real</span>':a.label==='fp'?'<span class="badge s-None">False alarm</span>':'';
+  var st=a.status==='closed'?'<span class="badge s-None">Closed</span>':a.status==='ack'?'<span class="badge s-OK">Acknowledged</span>':od?'<span class="badge s-Critical">Overdue</span>':'<span class="badge s-None">Open</span>';
+  return '<article class="card alert s-'+a.sev+'" data-key="'+esc(a.key)+'"><div class="row">'+sevBadge(a.sev)+'<span class="badge s-None">'+(a.kind==='gap'?'Coordination gap':'Risk')+'</span>'+st+lab+'</div>'+
+   '<h3 style="margin-top:.5rem">'+esc(s.name)+(a.areas.length?' · '+esc(a.areas.join(', ')):'')+'</h3><p>'+esc(a.detail)+'</p>'+
+   '<p class="meta">Owner: '+esc(s.owner)+' · Detected '+esc(ago(a.detectedAt))+' · '+(a.status==='open'?(od?'overdue by '+dur(now()-due):'respond within '+dur(due-now())):a.ackedAt?'acknowledged '+dur(a.ackedAt-a.detectedAt)+' after detection':'')+'</p>'+
+   '<p><b>Recommended action:</b> '+esc(a.action)+'</p>'+
+   '<div class="row">'+
+   (a.status==='open'?'<button class="btn sm primary" data-act="ack" data-key="'+esc(a.key)+'">Acknowledge</button>':'')+
+   (a.status!=='closed'&&a.label!=='tp'?'<button class="btn sm" data-act="lab" data-v="tp" data-key="'+esc(a.key)+'">Confirm real issue</button>':'')+
+   (a.status!=='closed'&&a.label!=='fp'?'<button class="btn sm plain" data-act="lab" data-v="fp" data-key="'+esc(a.key)+'">Mark false alarm</button>':'')+
+   '</div></article>';
+}
+function alertsView(){
+  var list=state.alerts.filter(function(a){
+    return (ui.fKind==='all'||a.kind===ui.fKind)&&(ui.fSev==='all'||a.sev===ui.fSev)&&(ui.fSvc==='all'||a.svc===ui.fSvc)&&
+      (ui.fStat==='closed'?a.status==='closed':a.status!=='closed');
+  }).sort(function(a,b){return (overdue(b)-overdue(a))||(RANK[b.sev]-RANK[a.sev])||(a.detectedAt-b.detectedAt)});
+  var f=function(name,label,arr,cur){return '<div><label for="f-'+name+'">'+label+'</label><select id="f-'+name+'" data-filter="'+name+'">'+opt(arr,cur)+'</select></div>'};
+  return '<h1>Alerts and risks</h1><p class="hint">The risk register and the coordination gap list in one place. Thresholds: page over 1 MB, slow 3G load over 5 s (High) or 10 s (Critical), over 2 MB per task, any failed screen reader task, contrast under 4.5:1, 5 or more reports from one area in 7 days, ticket unassigned over 24 h, fix with no re-test, untested areas.</p>'+
+   '<div class="filters">'+f('fKind','Type',[['all','All'],['risk','Risks'],['gap','Coordination gaps']],ui.fKind)+f('fSev','Severity',[['all','All'],['Critical','Critical'],['High','High'],['Medium','Medium'],['Low','Low']],ui.fSev)+
+   f('fSvc','Service',[['all','All']].concat(state.services.map(function(s){return [s.id,s.name]})),ui.fSvc)+f('fStat','Status',[['active','Active'],['closed','Closed']],ui.fStat)+'</div>'+
+   '<p class="meta" role="status">'+list.length+' alert'+(list.length===1?'':'s')+' shown</p>'+(list.length?list.map(alertCard).join(''):'<p class="card">Nothing matches these filters.</p>');
+}
+function trackerView(){
+  var owners=state.services.map(function(s){return s.owner}).filter(function(o,i,a){return a.indexOf(o)===i});
+  var list=primary().filter(function(k){
+    if(ui.tStat==='all')return true;if(ui.tStat==='breach')return k.status!=='Verified'&&ticketSLA(k).breach;return k.status===ui.tStat;
+  }).sort(function(a,b){return b.createdAt-a.createdAt});
+  var next={Open:'Assign',Assigned:'Start work','In progress':'Mark fixed',Resolved:'Verified after re-test'};
+  return '<h1>Status tracker</h1><p class="hint">Open → Assigned → In progress → Resolved → Verified. Similar reports from the same area are merged under one ticket.</p>'+
+   '<div class="filters"><div><label for="f-tStat">Show</label><select id="f-tStat" data-filter="tStat">'+opt([['all','All tickets'],['Open','Open'],['Assigned','Assigned'],['In progress','In progress'],['Resolved','Resolved (awaiting re-test)'],['Verified','Verified'],['breach','Past SLA']],ui.tStat)+'</select></div></div>'+
+   '<div class="card scroll"><table><thead><tr><th scope="col">Ticket</th><th scope="col">Service and area</th><th scope="col">Issue</th><th scope="col">Severity</th><th scope="col">Status</th><th scope="col">Owner</th><th scope="col">Age</th><th scope="col">SLA</th><th scope="col">Next step</th></tr></thead><tbody>'+
+   (list.length?list.map(function(k){
+     var sev=TYPES[k.type].sev,sl=ticketSLA(k),d=dupCount(k.id);
+     var ownerCell=k.status==='Open'?'<label class="sr" for="own-'+k.id+'">Owner for '+k.id+'</label><select id="own-'+k.id+'" style="min-width:120px;min-height:36px">'+opt([[svcOf(k.svc).owner,svcOf(k.svc).owner+' (service owner)']].concat(owners.filter(function(o){return o!==svcOf(k.svc).owner}).map(function(o){return [o,o]})),'')+'</select>':esc(k.owner||'—');
+     var slaTxt=k.status==='Verified'||k.resolvedAt?(sl.breach?'<span class="badge s-Critical">Late</span>':'<span class="badge s-OK">Met</span>'):sl.breach?'<span class="badge s-Critical">Breached '+dur(-sl.left)+'</span>':'<span class="badge s-None">'+dur(sl.left)+' left</span>';
+     return '<tr><td><b>'+esc(k.id)+'</b>'+(d?'<br><span class="meta">+'+d+' similar</span>':'')+'</td><td>'+esc(svcOf(k.svc).name)+'<br><span class="meta">'+esc(areaName(k.area))+'</span></td><td>'+esc(TYPES[k.type].en)+'<br><span class="meta">'+esc(k.desc)+'</span></td><td>'+sevBadge(sev)+'</td><td>'+esc(k.status)+(k.userOk&&k.status!=='Verified'?'<br><span class="meta">Reporter says fixed</span>':'')+'</td><td>'+ownerCell+'</td><td>'+dur(now()-k.createdAt)+'</td><td>'+slaTxt+'</td><td>'+(next[k.status]?'<button class="btn sm primary" data-act="adv" data-id="'+esc(k.id)+'">'+next[k.status]+'</button>':'<span class="meta">Closed</span>')+'</td></tr>';
+   }).join(''):'<tr><td colspan="9">No tickets in this view.</td></tr>')+'</tbody></table></div>';
+}
+function dataView(){
+  var c=state.counts,rj=state.rejected.length;
+  var svcs=state.services.map(function(s){return [s.id,s.name]}),areas=state.areas.map(function(a){return [a.id,a.name+' ('+a.net+')']});
+  var ph='<option value="">Choose…</option>';
+  return '<h1>Data in</h1><p class="hint">Every record is checked before it is used. Rejected records are listed with the reason.</p>'+
+   '<div class="grid g4" style="margin-bottom:1rem"><div class="card kpi"><b>'+(c.valid+rj)+'</b><span>Records received</span></div><div class="card kpi"><b>'+c.valid+'</b><span>Valid</span></div><div class="card kpi"><b>'+rj+'</b><span>Rejected</span></div><div class="card kpi"><b>'+c.dup+'</b><span>Duplicates merged</span></div></div>'+
+   '<details class="card" open><summary>Add a test record</summary><form id="f-test" novalidate class="grid g2" style="margin-top:.8rem">'+
+   '<div class="field"><label for="t-svc">Service</label><select id="t-svc" name="svc">'+ph+opt(svcs,'')+'</select></div>'+
+   '<div class="field"><label for="t-area">Area (network type comes from the area)</label><select id="t-area" name="area">'+ph+opt(areas,'')+'</select></div>'+
+   '<div class="field"><label for="t-kb">Page size (KB)</label><input id="t-kb" name="kb" type="number" step="any" inputmode="decimal"></div>'+
+   '<div class="field"><label for="t-sec">Load time on that network (seconds, 0 to 120)</label><input id="t-sec" name="sec" type="number" step="any" inputmode="decimal"></div>'+
+   '<div class="field"><label for="t-mb">Data used for one core task (MB)</label><input id="t-mb" name="mb" type="number" step="any" inputmode="decimal"></div>'+
+   '<div class="field"><label for="t-done">Was the task completed?</label><select id="t-done" name="done"><option value="yes">Yes</option><option value="no">No</option></select></div>'+
+   '<div class="field"><label for="t-at">Assistive tech task (screen reader)</label><select id="t-at" name="at"><option value="na">Not tested</option><option value="pass">Passed</option><option value="fail">Failed</option></select></div>'+
+   '<div class="field" style="align-self:end"><button class="btn primary" type="submit">Validate and add</button></div></form></details>'+
+   '<details class="card"><summary>Log uptime and errors</summary><form id="f-ops" novalidate class="grid g2" style="margin-top:.8rem">'+
+   '<div class="field"><label for="o-svc">Service</label><select id="o-svc" name="svc">'+ph+opt(svcs,'')+'</select></div>'+
+   '<div class="field"><label for="o-up">Uptime (%)</label><input id="o-up" name="up" type="number" step="any" inputmode="decimal"></div>'+
+   '<div class="field"><label for="o-err">Error rate (%)</label><input id="o-err" name="err" type="number" step="any" inputmode="decimal"></div>'+
+   '<div class="field" style="align-self:end"><button class="btn primary" type="submit">Validate and save</button></div></form></details>'+
+   '<details class="card"><summary>Register a service</summary><form id="f-svc" novalidate class="grid g2" style="margin-top:.8rem">'+
+   '<div class="field"><label for="s-name">Service name</label><input id="s-name" name="name" type="text"></div>'+
+   '<div class="field"><label for="s-ch">Channel</label><select id="s-ch" name="ch">'+opt([['Website','Website'],['Android app','Android app'],['WhatsApp','WhatsApp'],['SMS / IVR','SMS / IVR']],'Website')+'</select></div>'+
+   '<div class="field"><label for="s-own">Owner</label><input id="s-own" name="owner" type="text"></div>'+
+   '<div class="field"><label for="s-ver">Version</label><input id="s-ver" name="ver" type="text"></div>'+
+   '<div class="field"><label for="s-con">Lowest colour contrast found (:1)</label><input id="s-con" name="con" type="number" step="any" value="7"></div>'+
+   '<div class="field"><label for="s-wc">Critical WCAG failures found</label><input id="s-wc" name="wc" type="number" value="0"></div>'+
+   '<div class="field"><label class="check"><input type="checkbox" name="off" value="1"><span>Works offline or in low-data mode</span></label></div>'+
+   '<div class="field"><label class="check"><input type="checkbox" name="sms" value="1"><span>Has a text-only or SMS option</span></label></div>'+
+   '<div class="field"><button class="btn primary" type="submit">Validate and register</button></div></form></details>'+
+   '<h2 style="margin-top:1.25rem">Rejection log</h2><div class="card scroll"><table><thead><tr><th scope="col">When</th><th scope="col">Source</th><th scope="col">Reason</th><th scope="col">Record</th></tr></thead><tbody>'+
+   (state.rejected.length?state.rejected.slice(0,12).map(function(r){return '<tr><td>'+esc(ago(r.at))+'</td><td>'+esc(r.source)+'</td><td>'+esc(r.reason)+'</td><td>'+esc(r.snippet)+'</td></tr>'}).join(''):'<tr><td colspan="4">Nothing rejected yet.</td></tr>')+'</tbody></table></div>';
+}
+function evalView(){
+  var m=evalMetrics(),rows=evalRows(m);
+  return '<h1>Evaluation</h1><p class="hint">How well the system detects problems, how fast people respond, and whether services actually work for the people they were built for. Mark alerts as real or false on the Alerts page to improve accuracy.</p>'+
+   (ui.evalMsg?'<div class="banner ok" role="status">'+esc(ui.evalMsg)+'</div>':'')+
+   '<div class="card scroll"><table><thead><tr><th scope="col">Area</th><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Target</th><th scope="col">Result</th></tr></thead><tbody>'+
+   rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><b>'+r[2]+'</b></td><td>'+r[3]+'</td><td>'+(r[4]===null?'<span class="badge s-None">'+(r[2]==='—'?'No data yet':'Tracked')+'</span>':r[4]?'<span class="badge s-OK">✓ Met</span>':'<span class="badge s-Critical">✗ Not met</span>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+   '<div class="card"><h3>Detection counts</h3><p>Confirmed real: <b>'+m.tp+'</b> · False alarms: <b>'+m.fp+'</b> · Real issues the system missed: <b>'+m.fn+'</b> · Alerts not yet labelled: <b>'+m.unl+'</b></p>'+
+   '<p class="hint">Precision = confirmed ÷ (confirmed + false). Recall = confirmed ÷ (confirmed + missed). If a person finds a real problem the system never flagged, log it here.</p><button class="btn" data-act="missed">Log a missed issue</button></div>';
+}
+function recActions(){
+  var map={};
+  state.alerts.filter(function(a){return a.status!=='closed'}).forEach(function(a){var r=map[a.rule]=map[a.rule]||{act:a.action,svcs:[],rank:0};if(r.svcs.indexOf(svcOf(a.svc).name)<0)r.svcs.push(svcOf(a.svc).name);r.rank=Math.max(r.rank,RANK[a.sev])});
+  return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return b.rank-a.rank});
+}
+function reportText(){
+  var m=evalMetrics(),act=state.alerts.filter(function(a){return a.status!=='closed'}),n=now();
+  var c=function(s){return act.filter(function(a){return a.sev===s}).length};
+  var prim=primary(),open=prim.filter(function(k){return k.status!=='Verified'}),week=state.tickets.filter(function(k){return n-k.createdAt<=7*D});
+  var resolved=prim.filter(function(k){return k.status==='Resolved'||k.status==='Verified'}).length;
+  var top=act.slice().sort(function(a,b){return (RANK[b.sev]-RANK[a.sev])||(a.detectedAt-b.detectedAt)}).slice(0,5);
+  var L=[];
+  L.push('REACH CHECK – STATUS REPORT');L.push('Generated '+new Date().toLocaleString());L.push('');
+  L.push('COVERAGE AND DATA QUALITY');
+  L.push('- '+state.services.length+' services, '+state.areas.length+' areas, coverage '+pct(m.cov));
+  L.push('- Records: '+(state.counts.valid+state.rejected.length)+' received, '+state.counts.valid+' valid, '+state.rejected.length+' rejected, '+state.counts.dup+' duplicates merged');L.push('');
+  L.push('LAST 7 DAYS');
+  L.push('- New user reports: '+week.length);
+  L.push('- Tickets: '+resolved+' resolved or verified, '+open.length+' still pending, '+open.filter(function(k){return ticketSLA(k).breach}).length+' past SLA');
+  L.push('- User satisfaction after fix: '+(m.sat==null?'no ratings yet':m.sat.toFixed(1)+' / 5'));L.push('');
+  L.push('ACTIVE ALERTS: '+c('Critical')+' critical, '+c('High')+' high, '+c('Medium')+' medium, '+c('Low')+' low');
+  L.push('Top 5 issues');
+  top.forEach(function(a,i){L.push((i+1)+'. ['+a.sev+'] '+svcOf(a.svc).name+(a.areas.length?' ('+a.areas.join(', ')+')':'')+': '+a.detail+'. Owner: '+svcOf(a.svc).owner)});L.push('');
+  L.push('DETECTION AND RESPONSE');
+  L.push('- Precision '+pct(m.P)+', recall '+pct(m.R)+', F1 '+(m.F==null?'—':m.F.toFixed(2))+', false alarm rate '+pct(m.FA));
+  L.push('- MTTD '+(m.mttd==null?'—':dur(m.mttd))+', MTTA '+(m.mtta==null?'—':dur(m.mtta))+', MTTR (all) '+(m.mttr==null?'—':dur(m.mttr))+', SLA compliance '+pct(m.sla));
+  L.push('- Task completion: '+pct(m.tcLB)+' on 2G/3G, '+pct(m.tcAT)+' with assistive tech; average '+(m.mb==null?'—':m.mb.toFixed(1))+' MB per task');L.push('');
+  L.push('RECOMMENDED ACTIONS');
+  recActions().forEach(function(r){L.push('- '+r.act+' ('+r.svcs.join(', ')+')')});
+  return L.join('\n');
+}
+function reportTab(){
+  return '<h1>Reports</h1><p class="hint">A summary built from the live data. Copy it into an email or document.</p><div class="card"><label class="sr" for="rep">Report text</label><textarea id="rep" class="report" readonly>'+esc(reportText())+'</textarea><div class="row" style="margin-top:.6rem"><button class="btn primary" data-act="copy">Copy report</button></div></div>';
+}
+
+/* ---------- render & events ---------- */
+function render(){
+  var y=window.scrollY||0,root=document.documentElement;
+  if(ui.theme==='auto')root.removeAttribute('data-theme');else root.setAttribute('data-theme',ui.theme);
+  root.style.fontSize=ui.size==='large'?'125%':'100%';
+  var ro=document.documentElement;ro.lang=(ui.stage==='lang'||(ui.lang==='ta'&&(ui.stage!=='app'||ui.role==='user')))?'ta':'en';
+  document.getElementById('app').innerHTML=wm()+(ui.stage==='lang'?gateLang():ui.stage==='login'?gateLogin():head()+'<div class="wrap"><main id="main" tabindex="-1">'+banner()+(ui.role==='user'?userView():coordView())+'</main></div>'+foot())+'<button class="btn primary vbar" data-act="read">🔊 '+esc(t('read'))+'</button>';
+  window.scrollTo(0,y);
+}
+function go(focusMain){ui.msg=null;ui.trackMsg=null;ui.evalMsg=null;render();if(ui.voice&&focusMain){var h1=document.querySelector('main h1');if(h1)speak(h1.innerText)}if(focusMain){var m=document.getElementById('main');if(m)m.focus({preventScroll:true});window.scrollTo(0,0)}}
+function findAlert(k){return state.alerts.filter(function(a){return a.key===k})[0]}
+function findTicket(id){return state.tickets.filter(function(k){return k.id===id})[0]}
+function num(v){var x=parseFloat(v);return isFinite(x)?x:NaN}
+
+var forms={
+ 'f-pw':function(v){var cur=state.coordPw||DEMO.coord[1],e=null;
+   if(v.old!==cur)e='The current password is wrong.';else if((v.nw||'').length<6)e='The new password must have at least 6 characters.';
+   else if(v.nw!==v.nw2)e='The two new passwords are not the same.';else if(v.nw===cur)e='The new password must be different from the current one.';
+   if(e){ui.msg={kind:'err',text:e};render();say(e);return}
+   state.coordPw=v.nw;save();ui.msg={kind:'ok',text:'Password changed. Use the new password next time you log in.'};render();say(ui.msg.text)},
+ 'f-login':function(v){var d=DEMO[ui.pick];
+   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v.uid||'').trim())){ui.msg={kind:'err',text:t('badMail')};render();say(t('badMail'));return}
+   if(d){ui.role=ui.pick;ui.stage='app';ui.msg=null;ui.utab='report';ui.ctab='home';
+     if(ui.role==='coord'&&window.Notification&&Notification.permission==='default'){try{Notification.requestPermission()}catch(e){}}render();window.scrollTo(0,0);if(ui.voice){var h=document.querySelector('main h1');if(h)speak(h.innerText)}}
+   else{ui.msg={kind:'err',text:t('badLogin')};render();say(t('badLogin'))}},
+ 'f-report':function(v){
+   var e={},d=(v.desc||'').trim();
+   if(!v.svc)e.svc=t('e_svc');if(!v.area)e.area=t('e_area');if(!v.type)e.type=t('e_type');
+   if(d.length<10){e.desc=t('e_desc');reject('User report','Description too short (min 10 characters)',d.slice(0,60))}
+   else if(/https?:\/\/|www\./i.test(d)||/(.)\1{7,}/.test(d)){e.desc=t('e_spam');reject('User report','Looks like spam (link or repeated characters)',d.slice(0,60))}
+   if(!v.consent)e.consent=t('e_consent');
+   if(Object.keys(e).length){ui.rv=v;ui.re=e;save();render();
+     var first=['svc','area','type','desc','consent'].filter(function(k){return e[k]})[0],el=document.getElementById('r-'+first);if(el)el.focus();say(e[first]);return}
+   var dupe=state.tickets.filter(function(k){return !k.dupOf&&k.svc===v.svc&&k.area===v.area&&k.type===v.type&&k.status!=='Verified'&&now()-k.createdAt<7*D})[0];
+   var id='T-'+(Math.max.apply(null,[1000].concat(state.tickets.map(function(k){return parseInt(k.id.slice(2),10)})))+1);
+   state.tickets.push({id:id,svc:v.svc,area:v.area,type:v.type,device:v.device,at:v.at,desc:d,name:(!v.anon&&(v.name||'').trim())||null,createdAt:now(),status:'Open',owner:null,
+     assignedAt:null,startedAt:null,resolvedAt:null,verifiedAt:null,rating:null,userOk:false,dupOf:dupe?dupe.id:null});
+   state.counts.valid++;if(dupe)state.counts.dup++;notify(v.svc,id,TYPES[v.type].en,areaName(v.area));
+   syncAlerts();save();ui.rv={};ui.re={};ui.done={id:id,dup:dupe?dupe.id:null};render();say(t('gotIt')+' '+id);
+ },
+ 'f-track':function(v){ui.track=(v.id||'').trim();ui.trackMsg=null;render()},
+ 'f-test':function(v){
+   var er=[],kb=num(v.kb),sec=num(v.sec),mb=num(v.mb);
+   if(!v.svc)er.push('Choose a service');if(!v.area)er.push('Choose an area');
+   if(!(kb>0&&kb<=50000))er.push('Page size must be between 1 and 50,000 KB');
+   if(!(sec>=0&&sec<=120))er.push('Load time '+(isNaN(sec)?'is missing':v.sec+' s is out of range')+' (0 to 120 s)');
+   if(!(mb>=0&&mb<=500))er.push('Data per task must be between 0 and 500 MB');
+   if(er.length){if(v.svc&&v.area&&(!(sec>=0&&sec<=120)||!(kb>0)||!(mb>=0)))reject('Test record',er.join('; '),svcOf(v.svc).name+' · '+areaName(v.area));ui.msg={kind:'err',text:'Not added: '+er.join('. ')+'.'};render();return}
+   var before=state.alerts.filter(function(a){return a.status!=='closed'}).length;
+   state.tests.push({id:'R'+(state.tests.length+1),svc:v.svc,area:v.area,kb:kb,sec:sec,mb:mb,done:v.done==='yes',at:v.at==='na'?null:v.at==='pass',when:now()});
+   state.counts.valid++;syncAlerts();save();
+   var after=state.alerts.filter(function(a){return a.status!=='closed'}).length;
+   ui.msg={kind:'ok',text:'Test record added. '+(after>before?(after-before)+' new alert'+(after-before>1?'s':'')+' raised.':'No new alerts.')};render();say(ui.msg.text);
+ },
+ 'f-ops':function(v){
+   var up=num(v.up),er=num(v.err),e=[];
+   if(!v.svc)e.push('Choose a service');if(!(up>=0&&up<=100))e.push('Uptime must be between 0 and 100');if(!(er>=0&&er<=100))e.push('Error rate must be between 0 and 100');
+   if(e.length){if(v.svc)reject('Operational log',e.join('; '),svcOf(v.svc).name);ui.msg={kind:'err',text:'Not saved: '+e.join('. ')+'.'};render();return}
+   var s=svcOf(v.svc);s.uptime=up;s.err=er;s.checkedAt=now();state.counts.valid++;syncAlerts();save();ui.msg={kind:'ok',text:'Uptime and error rate saved for '+s.name+'.'};render();
+ },
+ 'f-svc':function(v){
+   var e=[],name=(v.name||'').trim(),own=(v.owner||'').trim(),ver=(v.ver||'').trim(),con=num(v.con),wc=num(v.wc);
+   if(name.length<3)e.push('Service name needs at least 3 characters');if(own.length<2)e.push('Owner is required');if(!ver)e.push('Version is required');
+   if(!(con>=1&&con<=21))e.push('Contrast must be between 1 and 21');if(!(wc>=0&&wc<=999&&wc%1===0))e.push('WCAG failures must be a whole number, 0 or more');
+   if(state.services.some(function(s){return s.name.toLowerCase()===name.toLowerCase()}))e.push('A service with this name already exists');
+   if(e.length){reject('Service record',e.join('; '),name);ui.msg={kind:'err',text:'Not registered: '+e.join('. ')+'.'};render();return}
+   state.services.push({id:'S'+(state.services.length+1),name:name,channel:v.ch,owner:own,version:ver,offline:!!v.off,sms:!!v.sms,contrast:con,wcag:wc,uptime:100,err:0,checkedAt:now()});
+   state.counts.valid++;syncAlerts();save();ui.msg={kind:'ok',text:name+' registered. It has no tests yet, so it shows as a blind spot until you add a test record.'};render();
+ }
+};
+
+document.addEventListener('submit',function(e){
+  e.preventDefault();var f=e.target,h=forms[f.id];if(!h)return;
+  var v={};new FormData(f).forEach(function(val,k){v[k]=val});h(v);
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.dataset&&el.dataset.set){ui[el.dataset.set]=el.value;save();render();return}
+  if(el.dataset&&el.dataset.filter){ui[el.dataset.filter]=el.value;render();var n=document.getElementById(el.id);if(n)n.focus()}
+});
+document.addEventListener('focusin',function(e){if(!ui.voice||ui.stage==='x')return;var el=e.target,tx='';
+  if(el.labels&&el.labels[0])tx=el.labels[0].innerText;else tx=el.getAttribute('aria-label')||el.innerText||'';
+  if(tx&&el.tagName!=='MAIN')speak(tx)});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&(e.target.id==='l-id'||e.target.id==='l-pw')){e.preventDefault();doLogin()}});
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-act]');if(!b)return;
+  var a=b.dataset.act,v=b.dataset.v,k,tk;
+  if(a==='lang'){ui.lang=v;ui.stage='login';ui.pick=null;save();render();window.scrollTo(0,0)}
+  else if(a==='login'){doLogin()}
+  else if(a==='pick'&&v==='user'){ui.role='user';ui.stage='app';ui.msg=null;ui.utab='report';render();window.scrollTo(0,0);if(ui.voice){var h0=document.querySelector('main h1');if(h0)speak(h0.innerText)}}
+  else if(a==='pick'){ui.pick=v;ui.msg=null;render();var li=document.getElementById('l-id');if(li)li.focus()}
+  else if(a==='back'){ui.msg=null;if(ui.pick)ui.pick=null;else ui.stage='lang';render()}
+  else if(a==='logout'){stopSpeak();ui.stage='login';ui.pick=null;ui.role='user';ui.done=null;ui.msg=null;render();window.scrollTo(0,0)}
+  else if(a==='read'){var sp=window.speechSynthesis;if(sp&&(sp.speaking||sp.pending)){stopSpeak()}else{var m=document.getElementById('main');speak(m?m.innerText:'')}}
+  else if(a==='voicetog'){ui.voice=!ui.voice;render();if(ui.voice)speak(t('voiceOn'));else stopSpeak()}
+  else if(a==='readall'){nf().forEach(function(n){n.read=true});save();render()}
+  else if(a==='perm'){try{Notification.requestPermission().then(function(){render()})}catch(x){}}
+  else if(a==='role'){ui.role=v;go(true)}
+  else if(a==='utab'){ui.utab=v;ui.done=null;go(true)}
+  else if(a==='ctab'){ui.ctab=v;go(true)}
+  else if(a==='another'){ui.done=null;go(true)}
+  else if(a==='ack'){k=findAlert(b.dataset.key);if(k&&!k.ackedAt){k.ackedAt=now();k.status='ack';save();ui.msg=null;render();say('Alert acknowledged')}}
+  else if(a==='lab'){k=findAlert(b.dataset.key);if(k){k.label=v;if(!k.ackedAt){k.ackedAt=now();k.status='ack'}save();render();say(v==='tp'?'Marked as a real issue':'Marked as a false alarm')}}
+  else if(a==='adv'){
+    tk=findTicket(b.dataset.id);if(!tk)return;var n=now();
+    if(tk.status==='Open'){var sel=document.getElementById('own-'+tk.id);tk.owner=sel&&sel.value?sel.value:svcOf(tk.svc).owner;tk.assignedAt=n;tk.status='Assigned'}
+    else if(tk.status==='Assigned'){tk.startedAt=n;tk.status='In progress'}
+    else if(tk.status==='In progress'){tk.resolvedAt=n;tk.status='Resolved'}
+    else if(tk.status==='Resolved'){tk.verifiedAt=n;tk.status='Verified'}
+    syncAlerts();save();ui.msg=null;render();say(tk.id+' is now '+tk.status);
+  }
+  else if(a==='fix'){
+    tk=findTicket(b.dataset.id);if(!tk)return;
+    if(v==='yes'){var r=document.getElementById('rate');tk.userOk=true;tk.rating=r?parseInt(r.value,10):null;ui.trackMsg=t('thanksYes')}
+    else{tk.status='In progress';tk.resolvedAt=null;tk.userOk=false;ui.trackMsg=t('reopened')}
+    syncAlerts();save();render();say(ui.trackMsg);
+  }
+  else if(a==='missed'){state.missed++;save();ui.evalMsg='Missed issue logged. Recall has been updated.';render();say(ui.evalMsg)}
+  else if(a==='copy'){
+    var ta=document.getElementById('rep'),txt=ta?ta.value:'';
+    var done=function(ok){ui.msg=ok?{kind:'ok',text:'Report copied.'}:{kind:'err',text:'Could not copy automatically. Select the text and copy it manually.'};render();say(ui.msg.text)};
+    try{navigator.clipboard.writeText(txt).then(function(){done(true)},function(){done(false)})}catch(x){done(false)}
+  }
+  else if(a==='reset'){try{localStorage.removeItem(KEY)}catch(x){}ui.done=null;ui.track='';seed();ui.msg={kind:'ok',text:'Sample data restored.'};render()}
+});
+
+window.addEventListener('error',function(ev){var m=document.getElementById('main')||document.body;var d=document.createElement('div');d.className='banner err';d.setAttribute('role','alert');d.textContent='Page error: '+ev.message+' (line '+ev.lineno+')';m.insertBefore(d,m.firstChild)});
+/* ---------- init ---------- */
+try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(p&&p.v===1&&p.services)state=p}}catch(e){state=null}
+if(!state)seed();if(!state.notifs)state.notifs=[];ui.theme='light';
+if(state.prefs){ui.lang=state.prefs.lang||'en';ui.size=state.prefs.size||'normal';ui.theme=state.prefs.theme||'auto'}
+syncAlerts();
+render();
+})();
+</script>
+</body>
+</html>
+
